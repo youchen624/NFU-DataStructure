@@ -1,0 +1,69 @@
+
+// Set([1,2,3])
+// class Set
+// {
+// public:
+//     enum class Type
+//     {
+//         Number = 0,
+//         Set = 1
+//     };
+//     class Node
+//     {
+//     public:
+//         Node() {};
+//         ~Node() {};
+
+//     private:
+//         char _type = 0;
+//         union _data
+//         {
+//             int number;
+//             Set *set;
+//         } _data;
+//     };
+
+//     Set() {};
+//     Set(int array[], int size) {};
+//     Set(Set &set) {};
+//     ~Set()
+//     {
+//         delete[] _array;
+//     };
+//     Type changeType(Type newType) {};
+//     Set getPowerSet(Set output = new Set()) {};
+
+// private:
+//     int _size = 0;
+//     Node *_array = nullptr;
+//     // int* _data = nullptr;
+// };
+
+// class Set {
+// public:
+// private:
+//     int _size = 0;
+
+// };
+
+
+
+/*
+int **getPowerSet(int *input_array, int size, int **output_array, int n = 0) // , int m = 0)
+{
+    static int goal = 0;
+    if (!n)
+        goal = pow(2, size);
+    if (n < goal)
+    {
+        // for ()
+        {
+        }
+    }
+    else
+    {
+        return output_array;
+    }
+};
+*/
+
