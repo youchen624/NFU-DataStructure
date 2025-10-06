@@ -15,21 +15,43 @@ public:
     {
     public:
         Node() : Node(Type::Set) {};
-        Node(int num) : _type(Type::Number)
-        {
-            data.number = num;
-        };
         Node(Type type) : _type(type)
         {
             if (type == Type::Set)
             {
-                data.set == nullptr;
+                data.set = nullptr;
             }
             else
             {
                 data.number = 0;
             }
         };
+        Node(int num) : _type(Type::Number)
+        {
+            data.number = num;
+        };
+        Node(const Node &node) {
+
+        };
+        ~Node()
+        {
+            if (_type == Type::Set)
+            {
+                delete data.set;
+            }
+        };
+        Node &operator=(const int num)
+        {
+            clean_delete();
+            _type = Type::Number;
+            data.number = num;
+        };
+        Node &operator=(const TheSet &set)
+        {
+            _type = Type::Set;
+            data.set = new TheSet(set);
+        };
+
         Type _type;
         union _data
         {
@@ -38,6 +60,13 @@ public:
         } data;
 
         friend ostream &operator<<(ostream &output, const Node &node);
+    private:
+        void clean_delete() {
+            if (_type == Type::Set && data.set) {
+                delete data.set;
+                data.set = nullptr;
+            }
+        };
     };
 
     Node *nodes = nullptr;
@@ -48,13 +77,21 @@ public:
     {
         if (size <= 0 || array == nullptr)
         {
+            nodes = nullptr;
+            length = 0;
             return;
         }
         nodes = new Node[size];
     };
+    TheSet(const TheSet &set) {
+
+    };
     ~TheSet()
     {
         delete[] nodes;
+    };
+    TheSet &operator=(const TheSet &set) {
+
     };
 
     friend ostream &operator<<(ostream &output, const TheSet &theSet);
