@@ -4,6 +4,9 @@
 #include <cmath>
 using namespace std;
 
+#define THE_SET_LEFT_SYMBOL "{"
+#define THE_SET_RIGHT_SYMBOL "}"
+
 class TheSet
 {
 public:
@@ -198,7 +201,8 @@ public:
         nodes[index] = set;
         return *this;
     };
-    TheSet &set(const size_t index, const Node &node) {
+    TheSet &set(const size_t index, const Node &node)
+    {
         nodes[index] = node;
         return *this;
     };
@@ -254,22 +258,20 @@ private:
 
     void _get_power_set(TheSet &result, size_t total, size_t num = 1)
     {
-        cout << "run.";
         // how many 1(2) inside num
         size_t size = __builtin_popcountl(num);
-        cout << "size_t size = __builtin_popcountl(num);" << size << endl;
         size_t t = num;
         TheSet set(size);
         for (size_t i = 0; i < size; ++i)
         {
             int index = __builtin_ctzl(t);
-            cout << "int index = __builtin_ctzl(t);" << index << endl;
             t ^= (1UL << index);
             set.set(i, this->nodes[index]);
         }
         result.set(num, set);
         ++num;
-        if (num < total) _get_power_set(result, total, num);
+        if (num < total)
+            _get_power_set(result, total, num);
     };
 };
 ostream &operator<<(ostream &output, const TheSet::Node &node)
@@ -283,7 +285,8 @@ ostream &operator<<(ostream &output, const TheSet::Node &node)
     {
         if (node.data.set != nullptr)
             output << *node.data.set;
-        else output << "()";
+        else
+            output << THE_SET_LEFT_SYMBOL << THE_SET_RIGHT_SYMBOL;
     }
     return output;
 };
@@ -291,20 +294,21 @@ ostream &operator<<(ostream &output, const TheSet &theSet)
 {
     if (theSet.nodes == nullptr)
     {
-        output << "()";
+        output << THE_SET_LEFT_SYMBOL << THE_SET_RIGHT_SYMBOL;
         return output;
     }
-    output << "(" << theSet.nodes[0];
+    output << THE_SET_LEFT_SYMBOL << theSet.nodes[0];
     for (size_t i = 1; i < theSet._length; ++i)
     {
         output << ", " << theSet.nodes[i];
     }
-    output << ")";
+    output << THE_SET_RIGHT_SYMBOL;
     return output;
 };
 
 int main()
 {
+    /*
     // const int array[10] = {0};
     const string array[3] = {"a", "b", "c"};
     TheSet set;
@@ -314,5 +318,18 @@ int main()
     cout << copy << endl;
     cout << array_set << endl;
     cout << array_set.getPowerSet() << endl;
+    */
+
+    cout << "Input the size of the set:" << endl;
+    int size;
+    cin >> size;
+    string *the_datas = new string[size];
+    for (int i = 0; i < size; ++i)
+    {
+        cin >> the_datas[i];
+    }
+    TheSet input_set(the_datas, size);
+    const TheSet powerset = input_set.getPowerSet();
+    cout << powerset << endl;
     return 0;
 }
