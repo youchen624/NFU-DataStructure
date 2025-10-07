@@ -4,8 +4,66 @@
 #include <cmath>
 using namespace std;
 
+#define THE_SET_EMPTY_SET "∅"
 #define THE_SET_LEFT_SYMBOL "{"
 #define THE_SET_RIGHT_SYMBOL "}"
+#define THE_SET_SEPARATOR ", "
+#define BITS_IN_SIZE_T 64
+
+/*
+[Ref](https://blog.csdn.net/github_38148039/article/details/109598368)
+[Ref](https://tomsworkspace.github.io/2021/02/27/GCC%E8%87%AA%E5%B8%A6%E7%9A%84%E4%B8%80%E4%BA%9Bbuiltin%E5%86%85%E5%BB%BA%E5%87%BD%E6%95%B0/)
+
+__builtin_popcountl(u)
+std::popcount(u)
+* @code
+* ```cpp
+unsigned long __popcount (unsigned long u)
+{
+    u = (u & 0x5555555555555555ULL) + ((u >> 1) & 0x5555555555555555ULL);
+    u = (u & 0x3333333333333333ULL) + ((u >> 2) & 0x3333333333333333ULL);
+    u = (u & 0x0F0F0F0F0F0F0F0FULL) + ((u >> 4) & 0x0F0F0F0F0F0F0F0FULL);
+    u = (u & 0x00FF00FF00FF00FFULL) + ((u >> 8) & 0x00FF00FF00FF00FFULL);
+    u = (u & 0x0000FFFF0000FFFFULL) + ((u >> 16) & 0x0000FFFF0000FFFFULL);
+    u = (u & 0x00000000FFFFFFFFULL) + ((u >> 32) & 0x00000000FFFFFFFFULL);
+    return u;
+}
+* ```
+*/
+size_t __popcount(size_t n)
+{
+    // kernigha
+    size_t count = 0;
+    while (n > 0)
+    {
+        n &= (n - 1);
+        count++;
+    }
+    return count;
+}
+
+/*
+[Ref](https://tomsworkspace.github.io/2021/02/27/GCC%E8%87%AA%E5%B8%A6%E7%9A%84%E4%B8%80%E4%BA%9Bbuiltin%E5%86%85%E5%BB%BA%E5%87%BD%E6%95%B0/)
+__builtin_ctzl(x)
+std::countr_zero(x)
+*/
+size_t _ctzl(size_t x) {
+    if (x == 0) {
+        // return sizeof(size_t) * CHAR_BIT;
+        return BITS_IN_SIZE_T;
+    }
+    unsigned long long u = (unsigned long long)x;
+    size_t r = 63;
+    u &= -u;
+    if (u & 0x00000000FFFFFFFFULL) r -= 32;
+    if (u & 0x0000FFFF0000FFFFULL) r -= 16;
+    if (u & 0x00FF00FF00FF00FFULL) r -= 8;
+    if (u & 0x0F0F0F0F0F0F0F0FULL) r -= 4;
+    if (u & 0x3333333333333333ULL) r -= 2;
+    if (u & 0x5555555555555555ULL) r -= 1;
+
+    return r;
+}
 
 class TheSet
 {
@@ -259,12 +317,14 @@ private:
     void _get_power_set(TheSet &result, size_t total, size_t num = 1)
     {
         // how many 1(2) inside num
-        size_t size = __builtin_popcountl(num);
+        // size_t size = __builtin_popcountl(num);
+        size_t size = __popcount(num);
         size_t t = num;
         TheSet set(size);
         for (size_t i = 0; i < size; ++i)
         {
-            int index = __builtin_ctzl(t);
+            // int index = __builtin_ctzl(t);
+            int index = _ctzl(t);
             t ^= (1UL << index);
             set.set(i, this->nodes[index]);
         }
@@ -286,7 +346,7 @@ ostream &operator<<(ostream &output, const TheSet::Node &node)
         if (node.data.set != nullptr)
             output << *node.data.set;
         else
-            output << THE_SET_LEFT_SYMBOL << THE_SET_RIGHT_SYMBOL;
+            output << THE_SET_EMPTY_SET;
     }
     return output;
 };
@@ -294,13 +354,13 @@ ostream &operator<<(ostream &output, const TheSet &theSet)
 {
     if (theSet.nodes == nullptr)
     {
-        output << THE_SET_LEFT_SYMBOL << THE_SET_RIGHT_SYMBOL;
+        output << THE_SET_EMPTY_SET;
         return output;
     }
     output << THE_SET_LEFT_SYMBOL << theSet.nodes[0];
     for (size_t i = 1; i < theSet._length; ++i)
     {
-        output << ", " << theSet.nodes[i];
+        output << THE_SET_SEPARATOR << theSet.nodes[i];
     }
     output << THE_SET_RIGHT_SYMBOL;
     return output;
