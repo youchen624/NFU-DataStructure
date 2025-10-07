@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <cmath>
 using namespace std;
 
@@ -7,7 +8,7 @@ class TheSet
 public:
     enum class Type
     {
-        Number = 0,
+        Data = 0,
         Set = 1
     };
 
@@ -23,15 +24,24 @@ public:
             }
             else
             {
-                data.number = 0;
+                data.value = new string("0");
             }
         };
-        Node(int num) : _type(Type::Number)
+        Node(const string value) : _type(Type::Data)
         {
-            data.number = num;
+            data.value = new string(value);
         };
-        Node(const Node &node) {
-
+        Node(const Node &node)
+        {
+            this->_type = node._type;
+            if (_type == Type::Set)
+            {
+                this->data.value = new string(*node.data.value);
+            }
+            else if (_type == Type::Data)
+            {
+                this->data.set = new TheSet(*node.data.set);
+            }
         };
         ~Node()
         {
@@ -39,73 +49,176 @@ public:
             {
                 delete data.set;
             }
+            else if (_type == Type::Data)
+            {
+                delete data.value;
+            }
         };
-        Node &operator=(const int num)
+        Node &operator=(const string value)
         {
             clean_delete();
-            _type = Type::Number;
-            data.number = num;
+            _type = Type::Data;
+            data.value = new string(value);
+            return *this;
         };
         Node &operator=(const TheSet &set)
         {
+            clean_delete();
             _type = Type::Set;
             data.set = new TheSet(set);
+            return *this;
         };
+        Node &operator=(const Node &that)
+        {
+            if (this == &that)
+            {
+                return *this;
+            }
+            clean_delete();
+            this->_type = that._type;
+            if ((_type == Type::Data) && (that.data.value != nullptr))
+            {
+                this->data.value = new string(*that.data.value);
+            }
+            else if ((_type == Type::Set) && (that.data.set != nullptr))
+            {
+                this->data.set = new TheSet(*that.data.set);
+            }
+            return *this;
+        };
+
+        Node &reset() {};
 
         Type _type;
         union _data
         {
             TheSet *set;
-            int number;
+            string *value;
         } data;
 
         friend ostream &operator<<(ostream &output, const Node &node);
+
     private:
-        void clean_delete() {
-            if (_type == Type::Set && data.set) {
+        void clean_delete()
+        {
+            if (_type == Type::Set && data.set)
+            {
                 delete data.set;
                 data.set = nullptr;
+            }
+            else if (_type == Type::Data && data.value)
+            {
+                delete data.value;
+                data.value = nullptr;
             }
         };
     };
 
-    Node *nodes = nullptr;
-    int length;
-
     TheSet() : TheSet(nullptr, 0) {};
-    TheSet(int *array, int size) : length(size)
+    TheSet(const size_t length) : _length(length)
     {
-        if (size <= 0 || array == nullptr)
+        if (length <= 0)
         {
             nodes = nullptr;
-            length = 0;
             return;
         }
-        nodes = new Node[size];
+        nodes = new Node[length];
     };
-    TheSet(const TheSet &set) {
-
+    TheSet(const string *array, size_t length) : _length(length)
+    {
+        if (length <= 0 || array == nullptr)
+        {
+            nodes = nullptr;
+            _length = 0;
+            return;
+        }
+        nodes = new Node[length];
+        for (size_t i = 0; i < _length; ++i)
+        {
+            nodes[i] = array[i];
+        }
+    };
+    TheSet(const TheSet &that)
+    {
+        this->_length = that._length;
+        this->nodes = new Node[_length];
+        for (size_t i = 0; i < _length; ++i)
+        {
+            nodes[i] = that.nodes[i];
+        }
     };
     ~TheSet()
     {
         delete[] nodes;
     };
-    TheSet &operator=(const TheSet &set) {
-
-    };
-
-    friend ostream &operator<<(ostream &output, const TheSet &theSet);
-    TheSet getPowerSet()
+    TheSet &operator=(const TheSet &set)
     {
-        auto recursive = [&]() -> void {};
+        if (this == &set)
+            return *this;
+        clear();
+        _length = set._length;
+        nodes = new Node[_length];
+        for (size_t i = 0; i < _length; ++i)
+        {
+            nodes[i] = set.nodes[i];
+        }
         return *this;
     };
+
+    TheSet &clear()
+    {
+        delete[] nodes;
+        _length = 0;
+        nodes = nullptr;
+        return *this;
+    };
+    TheSet &reset(const size_t index) {};
+    TheSet &set(const size_t index, const string& value) {
+        nodes[index] = value;
+    };
+    TheSet &set(const size_t index, const TheSet set) {};
+    TheSet &change_length(const size_t length) //, const int mode)
+    {
+        if (_length == length)
+            return *this;
+        if (length)
+        {
+            Node *temp = new Node[length];
+            for (size_t i = 0; (i < _length) && (i < length); ++i)
+            {
+                temp[i] = nodes[i];
+            }
+            delete[] nodes;
+            nodes = temp;
+            _length = length;
+        }
+        else
+            clear();
+        return *this;
+    };
+    TheSet &getPowerSet()
+    {
+        const size_t powerSet_length = round(pow(2, _length));
+        TheSet *result_set = new TheSet(powerSet_length);
+        // recursive function
+        auto recursive = [&]() -> void {};
+        return *result_set;
+    };
+    const size_t length()
+    {
+        return _length;
+    };
+    friend ostream &operator<<(ostream &output, const TheSet &theSet);
+
+private:
+    Node *nodes = nullptr;
+    int _length;
 };
 ostream &operator<<(ostream &output, const TheSet::Node &node)
 {
-    if (node._type == TheSet::Type::Number)
+    if (node._type == TheSet::Type::Data)
     {
-        output << node.data.number;
+        output << node.data.value;
     }
     else if (node._type == TheSet::Type::Set)
     {
@@ -117,11 +230,11 @@ ostream &operator<<(ostream &output, const TheSet &theSet)
 {
     if (theSet.nodes == nullptr)
     {
-        output << " ( )";
+        output << "( )";
         return output;
     }
     output << "( " << theSet.nodes[0];
-    for (int i = 1; i < theSet.length; ++i)
+    for (size_t i = 1; i < theSet._length; ++i)
     {
         output << ", " << theSet.nodes[i];
     }
@@ -131,7 +244,14 @@ ostream &operator<<(ostream &output, const TheSet &theSet)
 
 int main()
 {
+    // const int array[10] = {0};
+    const string array[3] = {"a", "b", "c"};
     TheSet set;
+    TheSet array_set(array, 10);
+    TheSet copy = array_set;
     cout << set << endl;
+    cout << copy << endl;
+    cout << array_set << endl;
+    cout << array_set.getPowerSet() << endl;
     return 0;
 }
