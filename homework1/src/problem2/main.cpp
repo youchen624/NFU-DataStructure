@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <cmath>
 using namespace std;
@@ -24,7 +25,7 @@ public:
             }
             else
             {
-                data.value = new string("0");
+                data.value = nullptr;
             }
         };
         Node(const string value) : _type(Type::Data)
@@ -34,11 +35,11 @@ public:
         Node(const Node &node)
         {
             this->_type = node._type;
-            if (_type == Type::Set)
+            if (_type == Type::Data)
             {
                 this->data.value = new string(*node.data.value);
             }
-            else if (_type == Type::Data)
+            else if (_type == Type::Set)
             {
                 this->data.set = new TheSet(*node.data.set);
             }
@@ -87,7 +88,17 @@ public:
             return *this;
         };
 
-        Node &reset() {};
+        Node &reset()
+        {
+            clean_delete();
+            return *this;
+        };
+        string to_string()
+        {
+            stringstream ss;
+            ss << *this;
+            return ss.str();
+        };
 
         Type _type;
         union _data
@@ -172,11 +183,25 @@ public:
         nodes = nullptr;
         return *this;
     };
-    TheSet &reset(const size_t index) {};
-    TheSet &set(const size_t index, const string& value) {
-        nodes[index] = value;
+    TheSet &reset(const size_t index)
+    {
+        nodes[index].reset();
+        return *this;
     };
-    TheSet &set(const size_t index, const TheSet set) {};
+    TheSet &set(const size_t index, const string &value)
+    {
+        nodes[index] = value;
+        return *this;
+    };
+    TheSet &set(const size_t index, const TheSet &set)
+    {
+        nodes[index] = set;
+        return *this;
+    };
+    TheSet &set(const size_t index, const Node &node) {
+        nodes[index] = node;
+        return *this;
+    };
     TheSet &change_length(const size_t length) //, const int mode)
     {
         if (_length == length)
@@ -196,14 +221,27 @@ public:
             clear();
         return *this;
     };
-    TheSet &getPowerSet()
+    TheSet getPowerSet()
     {
         const size_t powerSet_length = round(pow(2, _length));
-        TheSet *result_set = new TheSet(powerSet_length);
+        TheSet result_set = TheSet(powerSet_length);
+        _get_power_set(result_set, powerSet_length);
         // recursive function
-        auto recursive = [&]() -> void {};
-        return *result_set;
+        // void recursive = [&](size_t num) -> void {
+        //     for() {}
+        //     recursive(num + 1);
+        // };
+        // recursive(0);
+        return result_set;
     };
+
+    string to_string()
+    {
+        stringstream ss;
+        ss << *this;
+        return ss.str();
+    };
+
     const size_t length()
     {
         return _length;
@@ -212,17 +250,40 @@ public:
 
 private:
     Node *nodes = nullptr;
-    int _length;
+    size_t _length;
+
+    void _get_power_set(TheSet &result, size_t total, size_t num = 1)
+    {
+        cout << "run.";
+        // how many 1(2) inside num
+        size_t size = __builtin_popcountl(num);
+        cout << "size_t size = __builtin_popcountl(num);" << size << endl;
+        size_t t = num;
+        TheSet set(size);
+        for (size_t i = 0; i < size; ++i)
+        {
+            int index = __builtin_ctzl(t);
+            cout << "int index = __builtin_ctzl(t);" << index << endl;
+            t ^= (1UL << index);
+            set.set(i, this->nodes[index]);
+        }
+        result.set(num, set);
+        ++num;
+        if (num < total) _get_power_set(result, total, num);
+    };
 };
 ostream &operator<<(ostream &output, const TheSet::Node &node)
 {
     if (node._type == TheSet::Type::Data)
     {
-        output << node.data.value;
+        if (node.data.value != nullptr)
+            output << *node.data.value;
     }
     else if (node._type == TheSet::Type::Set)
     {
-        output << node.data.set;
+        if (node.data.set != nullptr)
+            output << *node.data.set;
+        else output << "()";
     }
     return output;
 };
@@ -230,15 +291,15 @@ ostream &operator<<(ostream &output, const TheSet &theSet)
 {
     if (theSet.nodes == nullptr)
     {
-        output << "( )";
+        output << "()";
         return output;
     }
-    output << "( " << theSet.nodes[0];
+    output << "(" << theSet.nodes[0];
     for (size_t i = 1; i < theSet._length; ++i)
     {
         output << ", " << theSet.nodes[i];
     }
-    output << " )";
+    output << ")";
     return output;
 };
 
@@ -247,7 +308,7 @@ int main()
     // const int array[10] = {0};
     const string array[3] = {"a", "b", "c"};
     TheSet set;
-    TheSet array_set(array, 10);
+    TheSet array_set(array, 3);
     TheSet copy = array_set;
     cout << set << endl;
     cout << copy << endl;
