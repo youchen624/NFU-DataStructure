@@ -391,5 +391,6 @@ int main()
     TheSet input_set(the_datas, size);
     const TheSet powerset = input_set.getPowerSet();
     cout << powerset << endl;
+    delete the_datas;
     return 0;
 }
