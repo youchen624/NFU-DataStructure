@@ -5,16 +5,32 @@ using namespace std;
 class Polynomial
 {
 public:
-    Polynomial() : capacity(0) {};
+    Polynomial(int length = 0) : capacity(length)
+    {
+        termArray = new Term[length];
+    };
     // Construct the polynomial p(x) = 0.
+    // Copy constructor
+    Polynomial(const Polynomial &that) : capacity(that.capacity) {};
+
+    // destructor
+    ~Polynomial()
+    {
+        delete[] termArray;
+    };
 
     Polynomial Add(Polynomial poly)
     {
         int new_capacity = (this->capacity > poly.capacity ? this->capacity : poly.capacity);
+        Polynomial result(new_capacity);
+        for (int index = 0; index < new_capacity; ++index)
+        {
+            ;
+        }
     };
     // Return the sum of the polynomials *this and poly.
 
-    Polynomial Mult(Polynomial poly);
+    Polynomial Mult(Polynomial poly) {};
     // Return the product of the polynomials *this and poly.
 
     float Eval(float f)
@@ -28,6 +44,9 @@ public:
     };
     // Evaluate the polynomial *this at f and return the result.
 
+    // copy operators
+    Polynomial &operator=(Polynomial &that) {};
+
 private:
     Term *termArray; // array of nonzero terms
     int capacity;    // size of termArray
@@ -37,6 +56,9 @@ private:
 class Term
 {
     friend Polynomial;
+
+public:
+    Term() : coef(0.0f), exp(0) {};
 
 private:
     float coef; // coefficient
