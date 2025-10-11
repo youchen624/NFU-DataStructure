@@ -630,7 +630,7 @@ The Powerset is
 
 為了方便操作因此後續新增了 `Node` 子類，在過程中發現需要並新增複製建構子與運算子重載等功能。
 
-為符合題意，因此分別撰寫了一個 `TheSet::gePowerSet()` 方法及 `TheSet::_get_power_set(TheSet &result, size_t total, size_t num = 1)` 私有方法。其中公有方法用於準備前置作業，當完成後執行私有的 `TheSet::_get_power_set` 後返回結果。由於 `TheSet::_get_power_set` 為私有方法，可避免不當存取及操作，使使用者透過包裝過的公有方法取得正確的冪集合。
+為符合題意，因此分別撰寫了一個 `TheSet::gePowerSet()` 方法及 `TheSet::_get_power_set(TheSet &result, size_t total, size_t num = 1)` 私有方法。其中公有方法用於準備前置作業，當完成後執行私有的 `TheSet::_get_power_set` 後返回結果。由於 `TheSet::_get_power_set` 為私有方法，可避免不當存取及操作，使使用者僅可透過包裝過的公有方法取得正確的冪集合。
 
 在程式其中為了提高效率因此我參考了網路上計算整數在二進制狀況下1的總數及最近的1的位置的方法: `__popcount(size_t n)` 及 `__ctzl(size_t x)` 避免了複雜的迴圈運算，這在 $size$ 值很高的狀況下能顯著其成效。
 
