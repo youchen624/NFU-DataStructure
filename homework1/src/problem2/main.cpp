@@ -47,28 +47,20 @@ size_t __popcount(size_t n)
 __builtin_ctzl(x)
 std::countr_zero(x)
 */
-size_t __ctzl(size_t x)
-{
-    if (x == 0)
-    {
+size_t _ctzl(size_t x) {
+    if (x == 0) {
         // return sizeof(size_t) * CHAR_BIT;
         return BITS_IN_SIZE_T;
     }
     unsigned long long u = (unsigned long long)x;
     size_t r = 63;
     u &= -u;
-    if (u & 0x00000000FFFFFFFFULL)
-        r -= 32;
-    if (u & 0x0000FFFF0000FFFFULL)
-        r -= 16;
-    if (u & 0x00FF00FF00FF00FFULL)
-        r -= 8;
-    if (u & 0x0F0F0F0F0F0F0F0FULL)
-        r -= 4;
-    if (u & 0x3333333333333333ULL)
-        r -= 2;
-    if (u & 0x5555555555555555ULL)
-        r -= 1;
+    if (u & 0x00000000FFFFFFFFULL) r -= 32;
+    if (u & 0x0000FFFF0000FFFFULL) r -= 16;
+    if (u & 0x00FF00FF00FF00FFULL) r -= 8;
+    if (u & 0x0F0F0F0F0F0F0F0FULL) r -= 4;
+    if (u & 0x3333333333333333ULL) r -= 2;
+    if (u & 0x5555555555555555ULL) r -= 1;
 
     return r;
 }
@@ -106,17 +98,11 @@ public:
             this->_type = node._type;
             if (_type == Type::Data)
             {
-                if (node.data.value == nullptr)
-                    this->data.value = nullptr;
-                else
-                    this->data.value = new string(*node.data.value);
+                this->data.value = new string(*node.data.value);
             }
             else if (_type == Type::Set)
             {
-                if (node.data.set == nullptr)
-                    this->data.set = nullptr;
-                else
-                    this->data.set = new TheSet(*node.data.set);
+                this->data.set = new TheSet(*node.data.set);
             }
         };
         ~Node()
@@ -227,17 +213,10 @@ public:
     TheSet(const TheSet &that)
     {
         this->_length = that._length;
-        if (!_length)
+        this->nodes = new Node[_length];
+        for (size_t i = 0; i < _length; ++i)
         {
-            this->nodes = nullptr;
-        }
-        else
-        {
-            this->nodes = new Node[_length];
-            for (size_t i = 0; i < _length; ++i)
-            {
-                nodes[i] = that.nodes[i];
-            }
+            nodes[i] = that.nodes[i];
         }
     };
     ~TheSet()
@@ -308,11 +287,6 @@ public:
     {
         const size_t powerSet_length = round(pow(2, _length));
         TheSet result_set = TheSet(powerSet_length);
-        if (!_length)
-        {
-            result_set.set(0, *this);
-            return result_set;
-        }
         _get_power_set(result_set, powerSet_length);
         // recursive function
         // void recursive = [&](size_t num) -> void {
@@ -350,7 +324,7 @@ private:
         for (size_t i = 0; i < size; ++i)
         {
             // int index = __builtin_ctzl(t);
-            int index = __ctzl(t);
+            int index = _ctzl(t);
             t ^= (1UL << index);
             set.set(i, this->nodes[index]);
         }
@@ -410,16 +384,13 @@ int main()
     int size;
     cin >> size;
     string *the_datas = new string[size];
-    if (size)
-        cout << "Input the elements of the set(space-separated.):" << endl;
     for (int i = 0; i < size; ++i)
     {
         cin >> the_datas[i];
     }
     TheSet input_set(the_datas, size);
     const TheSet powerset = input_set.getPowerSet();
-    cout << "The Powerset is" << endl;
     cout << powerset << endl;
-    delete[] the_datas;
+    delete the_datas;
     return 0;
 }
