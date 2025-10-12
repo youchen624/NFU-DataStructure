@@ -11,7 +11,13 @@ public:
     };
     // Construct the polynomial p(x) = 0.
     // Copy constructor
-    Polynomial(const Polynomial &that) : capacity(that.capacity) {};
+    Polynomial(const Polynomial &that) : Polynomial(that.capacity)
+    {
+        for (int i = 0; i < capacity; ++i)
+        {
+            this->termArray[i] = that.termArray[i];
+        }
+    };
 
     // destructor
     ~Polynomial()
@@ -25,7 +31,8 @@ public:
         Polynomial result(new_capacity);
         for (int index = 0; index < new_capacity; ++index)
         {
-            ;
+            result.termArray[index].exp = index;
+            if (this->capacity >= new_capacity) {} else {}
         }
     };
     // Return the sum of the polynomials *this and poly.
@@ -59,6 +66,7 @@ class Term
 
 public:
     Term() : coef(0.0f), exp(0) {};
+    // Term operator=(const Term &that) {};
 
 private:
     float coef; // coefficient
