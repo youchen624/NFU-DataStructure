@@ -7,10 +7,16 @@
 
 using namespace std;
 
-/*
-#include <bit>
-std::bit_ceil
-*/
+// swap
+template <typename T>
+void swap(T &a, T &b)
+{
+    T c = a;
+    a = b;
+    b = c;
+}
+
+// std::bit_ceil    // #include <bit>
 unsigned int _bit_ceil(unsigned int n)
 {
     if (!n)
@@ -26,8 +32,32 @@ unsigned int _bit_ceil(unsigned int n)
     return n;
 };
 
+// Term exp less than CMP-function
+struct term_isExpLess {
+    bool operator()(const Term &a, const Term &b) {
+        return (a.exp < b.exp);
+    };
+};
+
+// CMP should be a compare-function bool(T a, T b)
+template <typename T, typename CMP>
+class Heap
+{
+public:
+    Heap() {};
+    ~Heap() {};
+    T pop() {};
+    T popush(T replace_) {};
+
+private:
+    void _heapify(size_t d_index = 0) {};
+    size_t _size;
+};
+
 class Polynomial
 {
+    friend istream &operator>>(istream &input, Polynomial &poly);
+
 public:
     // Construct the polynomial p(x) = 0.
     Polynomial(int length = 0) : capacity(_bit_ceil(length))
@@ -38,13 +68,14 @@ public:
     // Copy constructor
     Polynomial(const Polynomial &that) : Polynomial(that.capacity)
     {
-        for (int i = 0; i < that.terms; ++i)
+        this->terms = that.terms;
+        for (int i = 0; i < terms; ++i)
         {
             this->termArray[i] = that.termArray[i];
         }
     };
 
-    // destructor
+    // Destructor
     ~Polynomial()
     {
         delete[] termArray;
@@ -63,8 +94,7 @@ public:
         for (
             ; avail_this || avail_that;
             avail_this = (this_ti < this->capacity),
-            avail_that = (that_ti < that.capacity)
-        )
+            avail_that = (that_ti < that.capacity))
         {
             int this_exp = avail_this ? this->termArray[this_ti].exp : INT_MAX;
             int that_exp = avail_that ? that.termArray[that_ti].exp : INT_MAX;
@@ -73,7 +103,8 @@ public:
                 const int temp_coef = this->termArray[this_ti].coef + that.termArray[that_ti].coef;
                 ++this_ti;
                 ++that_ti;
-                if (!temp_coef) continue;
+                if (!temp_coef)
+                    continue;
                 temp_poly.termArray[main_ti].coef = temp_coef;
                 temp_poly.termArray[main_ti].exp = this_exp;
             }
@@ -99,13 +130,16 @@ public:
     };
 
     // Return the product of the polynomials *this and poly.
-    Polynomial Mult(Polynomial poly) {};
+    Polynomial Mult(Polynomial that)
+    {
+        ;
+    };
 
     // Evaluate the polynomial *this at f and return the result.
     float Eval(float f)
     {
         float temp = 0;
-        for (int i = 0; i < capacity; ++i)
+        for (int i = 0; i < terms; ++i)
         {
             temp += termArray[i].coef * pow(f, termArray[i].exp);
         }
@@ -164,6 +198,7 @@ private:
 class Term
 {
     friend Polynomial;
+    friend struct term_isExpLess;
 
 public:
     Term() : coef(0.0f), exp(0) {};
@@ -173,6 +208,8 @@ private:
     float coef; // coefficient
     int exp;    // exponent
 };
+
+istream& operator>>(const istream &input, Polynomial &poly) {};
 
 int main()
 {
