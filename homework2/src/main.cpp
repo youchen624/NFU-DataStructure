@@ -38,7 +38,7 @@ public:
     // Copy constructor
     Polynomial(const Polynomial &that) : Polynomial(that.capacity)
     {
-        for (int i = 0; i < capacity; ++i)
+        for (int i = 0; i < that.terms; ++i)
         {
             this->termArray[i] = that.termArray[i];
         }
@@ -155,6 +155,7 @@ private:
         }
         return -1;
     };
+
     Term *termArray; // array of nonzero terms
     int capacity;    // size of termArray
     int terms;       // number of nonzero terms
