@@ -35,6 +35,71 @@ unsigned int _bit_ceil(unsigned int n)
     return n;
 };
 
+// std::isdigit     // #include <ctype.h>
+bool isdigit(char c)
+{
+    return (c >= '0' && c <= '9');
+}
+
+/*
+template <typename T>
+class ArrayElf {
+public:
+    ArrayElf(T *ptr = nullptr, size_t size_ = 0) : array(ptr), size(size_) {};
+    ~ArrayElf() {
+        delete[] array;
+    };
+    T *array;
+    size_t size;
+};
+class StringArray {
+public:
+    static StringArray* string_split(const string &string) {};
+    StringArray() {};
+    ~StringArray() {};
+private:
+    string* _data;
+    size_t _size;
+};
+*/
+
+class Polynomial;
+class Term
+{
+    friend Polynomial;
+    friend struct term_isExpLess;
+    friend bool term_isExpLess(const Term &a, const Term &b);
+    // friend ostream &operator<<(const ostream &output, const Term term);
+    friend istream &operator>>(istream &input, Polynomial &poly);
+
+public:
+    Term(float coef_ = 0.0f, int exp_ = 0) : coef(coef_), exp(exp_) {};
+    // Term operator=(const Term &that) {};
+    string to_string(bool with_posSign = false)
+    {
+        string str = "";
+        if (!this->coef)
+            return str;
+        if (this->coef < 0)
+            str += '-';
+        else if (with_posSign)
+            str += '+';
+        str += std::to_string(this->coef);
+        if (!this->exp)
+            return str;
+        str += 'x';
+        if (this->exp != 1)
+        {
+            str += '^';
+            str += std::to_string(this->exp);
+        }
+        return str;
+    };
+
+private:
+    float coef; // coefficient
+    int exp;    // exponent
+};
 // Term exp less than CMP-function
 struct term_isExpLess
 {
@@ -59,10 +124,11 @@ private:
     size_t _size;
 };
 
+// #TODO add a operator&&()
 class Polynomial
 {
-    friend istream &operator>>(const istream &input, Polynomial &poly);
-    friend ostream &operator<<(const ostream &output, const Polynomial &poly);
+    friend istream &operator>>(istream &input, Polynomial &poly);
+    friend ostream &operator<<(ostream &output, const Polynomial &poly);
 
 public:
     // Construct the polynomial p(x) = 0.
@@ -131,14 +197,15 @@ public:
         if (temp_capacity == main_ti)
             return temp_capacity;
         Polynomial final_poly(main_ti);
-        copy(temp_poly.termArray[0], temp_poly.termArray[main_ti - 1], final_poly.termArray);
+        copy(temp_poly.termArray, temp_poly.termArray + main_ti - 1, final_poly.termArray);
         return final_poly;
     };
 
     // Return the product of the polynomials *this and poly.
     Polynomial Mult(Polynomial that)
     {
-        ;
+        Polynomial poly;
+        return poly;
     };
 
     // Evaluate the polynomial *this at f and return the result.
@@ -153,11 +220,24 @@ public:
     };
 
     // add a term
-    Polynomial &term_add(float coef, int exp) {};
-    Polynomial &term_set(float coef, int exp) {};
+    Polynomial &term_add(float coef, int exp)
+    {
+        return term_add(Term(coef, exp));
+    };
+    Polynomial &term_add(Term term)
+    {
+        if (capacity == terms)
+            _upgrade_capacity();
+        termArray[terms - 1] = term;
+        terms++;
+        return *this;
+    };
+
+    //
+    // Polynomial &term_set(int index, float coef, int exp) {};
 
     // copy operators
-    Polynomial &operator=(Polynomial &that) {};
+    // Polynomial &operator=(Polynomial &that) {};
 
 private:
     void _upgrade_capacity()
@@ -271,55 +351,118 @@ private:
     int terms;       // number of nonzero terms
 };
 
-class Term
-{
-    friend Polynomial;
-    friend struct term_isExpLess;
-    // friend ostream &operator<<(const ostream &output, const Term term);
-
-public:
-    Term() : coef(0.0f), exp(0) {};
-    // Term operator=(const Term &that) {};
-    string to_string(bool with_posSign = false)
-    {
-        string str = "";
-        if (!this->coef)
-            return str;
-        if (this->coef < 0)
-            str += '-';
-        else if (with_posSign)
-            str += '+';
-        str += std::to_string(this->coef);
-        if (!this->exp)
-            return str;
-        str += 'x';
-        if (this->exp != 1)
-        {
-            str += '^';
-            str += std::to_string(this->exp);
-        }
-        return str;
-    };
-
-private:
-    float coef; // coefficient
-    int exp;    // exponent
-};
-
-// ostream &operator<<(const ostream &output, const Term &term) {
+// ostream &operator<<(ostream &output, const Term &term) {
 //     string str = "";
 // };
-istream &operator>>(const istream &input, Polynomial &poly) {};
-ostream &operator<<(const ostream &output, const Polynomial &poly)
+// #TODO make "2x^4+(2x^4+1)" supports
+istream &operator>>(istream &input, Polynomial &poly)
+{
+    Term term;
+    string coef_str = "0", exp_str = "0";
+    int c = input.peek();
+    for (
+        int sign = 1;
+
+        (c != EOF) && (c != '\n');
+
+        c = input.peek(),
+            sign = 1,
+            coef_str = "0",
+            exp_str = "0",
+            term = Term())
+    {
+        // sign
+        // [+-..][0~9..][x][^][0~9..]
+        while ((c == '+') || (c == '-'))
+        {
+            if (c == '-')
+                sign *= -1;
+            input.get();
+            c = input.peek();
+        }
+
+        // coefficient
+        // integer part
+        while (isdigit(c))
+        {
+            coef_str += c;
+            input.get();
+            c = input.peek();
+        }
+        // decimals part
+        if (c == '.')
+        {
+            coef_str += '.';
+            input.get();
+            c = input.peek();
+            while (isdigit(c))
+            {
+                coef_str += c;
+                input.get();
+                c = input.peek();
+            }
+        }
+        term.coef = std::stof(coef_str) * sign;
+
+        // x & its exponent
+        if (c == 'x')
+        {
+            if (!term.coef)
+                term.coef = sign;
+            input.get();
+            c = input.peek();
+            if (c != '^') // exp =1
+            {
+                term.exp = 1;
+            }
+            else // exp > 1
+            {
+                input.get();
+                c = input.peek();
+                sign = 1;
+                while ((c == '+') || (c == '-')) // sign
+                {
+                    if (c == '-')
+                        sign *= -1;
+                    input.get();
+                    c = input.peek();
+                }
+                while (isdigit(c)) // exp getting
+                {
+                    exp_str += c;
+                    input.get();
+                    c = input.peek();
+                }
+                term.exp = std::stoi(exp_str) * sign;
+            };
+        }
+        else
+        {
+            term.exp = 0;
+        }
+
+        // set
+        poly.term_add(term);
+
+    };
+    // isdigit('.');
+    // isdigit('a');
+    return input;
+};
+ostream &operator<<(ostream &output, const Polynomial &poly)
 {
     for (int i = poly.terms - 1; i >= 0; ++i)
     {
-        cout << poly.termArray[i].to_string(i);
+        output << poly.termArray[i].to_string(i);
     }
-    cout << endl;
+    output << endl;
+    return output;
 };
 
 int main()
 {
+    Polynomial poly;
+    cin >> poly;
+    cout << poly;
     return 0;
 }
