@@ -1,6 +1,5 @@
 #include <iostream>
 #include <algorithm>
-#include <string>
 #include <cmath>
 
 // #include <limits.h>
@@ -18,6 +17,42 @@ void swap(T &a, T &b)
     b = c;
 }
 */
+
+// Term quick-sort by .exp
+void term_quick_sort_by_exp(Term arr[], int size)
+{
+    if (size <= 1)
+        return;
+    auto q_sort = [&](auto &self, int left, int right) mutable -> void
+    {
+        if (left >= right)
+            return;
+
+        int pivot = arr[left].exp;
+        int i = left - 1;
+        int j = right + 1;
+
+        while (true)
+        {
+            do
+            {
+                ++i;
+            } while (arr[i].exp < pivot);
+            do
+            {
+                --j;
+            } while (arr[j].exp > pivot);
+
+            if (i >= j)
+                break;
+
+            swap(arr[i], arr[j]);
+        }
+        self(self, left, j);
+        self(self, j + 1, right);
+    };
+    q_sort(q_sort, 0, size - 1);
+}
 
 // std::bit_ceil    // #include <bit>
 unsigned int _bit_ceil(unsigned int n)
@@ -61,8 +96,7 @@ private:
 
 class Polynomial
 {
-    friend istream &operator>>(const istream &input, Polynomial &poly);
-    friend ostream &operator<<(const ostream &output, const Polynomial &poly);
+    friend istream &operator>>(istream &input, Polynomial &poly);
 
 public:
     // Construct the polynomial p(x) = 0.
@@ -170,74 +204,23 @@ private:
         delete[] temp_ptr;
     };
 
-    void _sort()
+    void _narrow()  // makes bug
     {
-        if (terms <= 1)
-            return;
-        auto q_sort = [&](auto &self, int left, int right) mutable -> void
-        {
-            if (left >= right)
-                return;
-
-            int pivot = termArray[left].exp;
-            int i = left - 1;
-            int j = right + 1;
-
-            while (true)
-            {
-                do
-                {
-                    ++i;
-                } while (termArray[i].exp < pivot);
-                do
-                {
-                    --j;
-                } while (termArray[j].exp > pivot);
-
-                if (i >= j)
-                    break;
-
-                swap(termArray[i], termArray[j]);
-            }
-            self(self, left, j);
-            self(self, j + 1, right);
-        };
-        q_sort(q_sort, 0, terms - 1);
-
-        // narrow
-        Term *temp = new Term[capacity];
-        int new_terms = 0;
-        for (int i = 0, j = 0; i < terms; i = j, ++new_terms)
-        {
-            temp[i] = termArray[i];
-            for (j = i + 1; (j < terms) && (termArray[i].exp == termArray[j].exp); ++j)
-            {
-                temp[i].coef += termArray[j].coef;
-            }
-        }
-        delete[] termArray;
-        termArray = temp;
-        terms = new_terms;
-
-        // dump 0^0
-        _dump();
-    };
-
-    void _dump(double coef = 0, int exp = 0)
-    {
-        Term *temp = new Term[capacity];
-        int new_terms = 0;
+        Term *ar = new Term[capacity];
+        int new_terms = terms;
         for (int i = 0; i < terms; ++i)
         {
-            if ((termArray[i].exp != exp) || (termArray[i].coef != coef))
+            ar[i] = termArray[i];
+            while (termArray[i].exp != termArray[i + 1].exp)
             {
-                temp[new_terms] = termArray[i];
-                ++new_terms;
+                ar[i].coef += termArray[i + 1].coef;
+                --new_terms;
+                if(++i + 1 == terms) break;
             }
         }
-        delete[] termArray;
-        termArray = temp;
         terms = new_terms;
+        delete[] termArray;
+        termArray = ar;
     };
 
     // binary search; # return index, -1 if not exists
@@ -275,51 +258,24 @@ class Term
 {
     friend Polynomial;
     friend struct term_isExpLess;
-    // friend ostream &operator<<(const ostream &output, const Term term);
+    friend void term_quick_sort_by_exp(Term arr[], int size);
 
 public:
     Term() : coef(0.0f), exp(0) {};
     // Term operator=(const Term &that) {};
-    string to_string(bool with_posSign = false)
-    {
-        string str = "";
-        if (!this->coef)
-            return str;
-        if (this->coef < 0)
-            str += '-';
-        else if (with_posSign)
-            str += '+';
-        str += std::to_string(this->coef);
-        if (!this->exp)
-            return str;
-        str += 'x';
-        if (this->exp != 1)
-        {
-            str += '^';
-            str += std::to_string(this->exp);
-        }
-        return str;
-    };
 
 private:
     float coef; // coefficient
     int exp;    // exponent
 };
 
-// ostream &operator<<(const ostream &output, const Term &term) {
-//     string str = "";
-// };
 istream &operator>>(const istream &input, Polynomial &poly) {};
-ostream &operator<<(const ostream &output, const Polynomial &poly)
-{
-    for (int i = poly.terms - 1; i >= 0; ++i)
-    {
-        cout << poly.termArray[i].to_string(i);
-    }
-    cout << endl;
-};
 
 int main()
 {
+    int m, n;
+    while (cin >> n >> m)
+    {
+    }
     return 0;
 }
