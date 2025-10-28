@@ -113,6 +113,17 @@ class Term
 public:
     Term(float coef_ = 0.0f, int exp_ = 0) : coef(coef_), exp(exp_) {};
     // Term operator=(const Term &that) {};
+
+    // only add the coef, set exp as that
+    void c_add(const Term& that) {
+        this->exp = that.exp;
+        this->coef += that.coef;
+    };
+    // void e_add(const Term& that) {
+    //     this->exp += that.exp;
+    //     this->coef = that.coef;
+    // };
+
     string to_string(bool with_posSign = false)
     {
         // cout << "term.coef" << coef << ", " << "term.exp" << exp << endl; // DEBUG
@@ -147,45 +158,67 @@ public:
         return str;
     };
 
+    int get_exp() const {
+        return this->exp;
+    };
+    float get_coef() const {
+        return this->coef;
+    };
+
+    Term operator*(const Term& that) {
+        return Term(this->coef * that.coef, this->exp + that.exp);
+    };
+
 private:
     float coef; // coefficient
     int exp;    // exponent
 };
 // Term exp less than CMP-function
-struct term_isExpLess
+// struct term_isExpLess
+// {
+//     bool operator()(const Term &a, const Term &b)
+//     {
+//         return (a.exp < b.exp);
+//     };
+// };
+bool term_isExpLess(const Term &a, const Term &b)
 {
-    bool operator()(const Term &a, const Term &b)
-    {
-        return (a.exp < b.exp);
-    };
+    return (a.exp < b.exp);
 };
 
 // CMP should be a compare-function bool(T a, T b)
-template <typename T, typename CMP>
+template <typename T>
 class Heap
 {
 public:
-    Heap(size_t capacity_, const CMP &comp = CMP()) : _size(0), _capacity(__bit_ceil(capacity_))
+    using CMP = bool(*)(const T&, const T&);
+    Heap(size_t capacity_, CMP comp = nullptr) : _size(0), _capacity(__bit_ceil(capacity_))
     {
         heapArray = new T[_capacity];
+        if (!_comparator) {
+            _comparator = [](const T &a, const T &b){ return a.get_exp() < b.get_exp(); };
+        }
     };
     ~Heap()
     {
         delete[] heapArray;
     };
-    
+
     // build the Heap with array
-    void buildHeap(T *array_, size_t size_) {
-        if (this->_capacity < size_) {
+    void buildHeap(T *array_, size_t size_)
+    {
+        if (this->_capacity < size_)
+        {
             _resize(size_);
         }
         this->_size = size_;
         copy(array_, array_ + size_, this->heapArray);
-        for(int i = (size_ / 2) - 1; i >= 0; --i) {
+        for (int i = (size_ / 2) - 1; i >= 0; --i)
+        {
             _heapify_down(i);
         }
     };
-    
+
     bool isEmpty()
     {
         return !_size;
@@ -196,33 +229,40 @@ public:
     };
 
     // get an obj back, AND NOT replace a new
-    T extract() {
-        if (!_size) {
+    T extract()
+    {
+        if (!_size)
+        {
             throw std::out_of_range("Heap is empty.");
         }
         T old_value = heapArray[0];
         heapArray[0] = heapArray[--_size];
-        if (_size > 1) {
+        if (_size > 1)
+        {
             _heapify_down(0);
         }
         return old_value;
     };
 
     // get an obj back, AND replace a new
-    T replace(const T& value) {
-        if (!_size) {
+    T replace(const T &value)
+    {
+        if (!_size)
+        {
             throw std::out_of_range("Heap is empty.");
         }
         T old_value = heapArray[0];
         heapArray[0] = value;
-        if (_size > 1) {
+        if (_size > 1)
+        {
             _heapify_down(0);
         }
         return old_value;
     };
 
 private:
-    void _resize(size_t capacity_) {
+    void _resize(size_t capacity_)
+    {
         // have to fix when "reducing capacity"
 
         size_t new_capacity = __bit_ceil(capacity_);
@@ -232,23 +272,27 @@ private:
         delete[] temp;
         _capacity = new_capacity;
     };
-    void _heapify_down(size_t index = 0) {
+    void _heapify_down(size_t index = 0)
+    {
         size_t left = i_left(index);
         size_t right = i_right(index);
-        size_t smallest = index;    // pre
+        size_t smallest = index; // pre
 
         // cmp left chil-node
-        if ((left < _size) && _comparator(heapArray[left], heapArray[smallest])) {
+        if ((left < _size) && _comparator(heapArray[left], heapArray[smallest]))
+        {
             smallest = left;
         }
 
         // cmp right chil-node
-        if ((right < _size) && _comparator(heapArray[right], heapArray[smallest])) {
+        if ((right < _size) && _comparator(heapArray[right], heapArray[smallest]))
+        {
             smallest = right;
         }
 
         // cont
-        if (smallest != index) {
+        if (smallest != index)
+        {
             swap(heapArray[index], heapArray[smallest]);
             _heapify_down(smallest);
         }
@@ -264,6 +308,7 @@ private:
 };
 
 // #TODO add a operator&&()
+//
 class Polynomial
 {
     friend istream &operator>>(istream &input, Polynomial &poly);
@@ -348,7 +393,6 @@ public:
     };
 
     // Return the product of the polynomials *this and poly.
-    // #TODO #TODO
     Polynomial Mult(Polynomial that)
     {
         if (!this->is_sorted)
@@ -356,9 +400,43 @@ public:
         if (!that.is_sorted)
             that._sort();
 
-        //
-        Polynomial poly;
-        return poly;
+        Polynomial *poly_cheaper = this, *poly_greater = &that;
+        if (poly_cheaper->terms > poly_greater->terms)
+            swap(poly_cheaper, poly_greater);
+        int sml_terms = poly_cheaper->terms;
+
+        Polynomial poly_temp(sml_terms + poly_greater->terms); // min
+
+        // initial a Heap (prepare)
+        Heap<Term> heap(sml_terms, term_isExpLess);
+        Term *terray = new Term[sml_terms]; // very temp using
+        for (size_t i = 0; i < sml_terms; ++i) {
+            terray[i] = poly_cheaper->termArray[i] * poly_greater->termArray[0];
+        }
+        heap.buildHeap(terray, sml_terms);
+        delete[] terray;
+
+        // start multiing
+        size_t c_i = 0, g_i = 1;
+        Term temp;  // where is the first term?? #TODO
+        do {
+            Term t_term;
+            do {
+                // add
+                t_term.c_add(temp);
+                // 抓
+                if ((c_i < sml_terms) && !(g_i < poly_greater->terms)) {
+                    c_i = 0;
+                    ++g_i;
+                };
+                temp = ((g_i < poly_greater->terms) && (c_i < sml_terms))
+                    ? heap.replace(poly_cheaper->termArray[c_i++] * poly_greater->termArray[g_i])
+                    : heap.extract();
+            } while (t_term.exp == temp.exp);
+            poly_temp.term_append(t_term);
+        } while (!heap.isEmpty());  // where is the last term?? #TODO (when Empty, it will still at "temp")
+
+        return poly_temp;
     };
 
     // Evaluate the polynomial *this at f and return the result.
@@ -458,6 +536,7 @@ private:
         this->is_sorted = true;
         if (terms <= 1)
             return;
+        // here is why have to use C++14
         auto q_sort = [&](auto &self, int left, int right) mutable -> void
         {
             if (left >= right)
@@ -748,7 +827,8 @@ ostream &operator<<(ostream &output, const Polynomial &poly)
     {
         // cout << "debug: " << poly.termArray[poly.terms - i - 1].coef << ", " << poly.termArray[poly.terms - i - 1].exp << endl;
         output << poly.termArray[poly.terms - i - 1].to_string(i);
-        if (i < poly.terms - 1) output << " ";
+        if (i < poly.terms - 1)
+            output << " ";
     }
     // output << endl;
     return output;
@@ -770,7 +850,10 @@ int main()
             std::cin.ignore(INT_MAX, '\n');
             continue;
         }
-        cout << "(" << poly1 << ") + (" << poly2 << ") = \n" << poly1.Add(poly2);
+        cout << "(" << poly1 << ") + (" << poly2 << ") = \n"
+             << poly1.Add(poly2) << endl;
+        cout << "(" << poly1 << ") x (" << poly2 << ") = \n"
+             << poly1.Mult(poly2) << endl;
         // poly.debug();
     }
     return 0;
