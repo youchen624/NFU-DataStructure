@@ -1,10 +1,14 @@
 #include <iostream>
+#include <sstream>
 #include <algorithm>
+#include <iomanip>
 #include <string>
 #include <cmath>
 
 // #include <limits.h>
 #define INT_MAX 2147483647
+// float 允許誤差
+#define EPS 1e-6f
 
 using namespace std;
 
@@ -20,7 +24,7 @@ void swap(T &a, T &b)
 */
 
 // std::bit_ceil    // #include <bit>
-unsigned int _bit_ceil(unsigned int n)
+unsigned int __bit_ceil(unsigned int n)
 {
     if (!n)
         return 1;
@@ -39,6 +43,36 @@ unsigned int _bit_ceil(unsigned int n)
 bool isdigit(char c)
 {
     return (c >= '0' && c <= '9');
+}
+
+// is_zero  // fixed float bug by using a range limiting
+bool iszero(float f)
+{
+    return (fabs(f) < EPS);
+}
+
+// float equal
+bool float_equal(float a, float b)
+{
+    return fabs(a - b) < EPS;
+}
+
+// float(double) to string pro version  // (#by @ChatGPT)
+string ftos_pro(double f, int precision = 2)
+{
+    std::ostringstream oss;
+    if (fabs(f - round(f)) < EPS)
+    {
+        oss << (long long)round(f);
+    }
+    else
+    {
+        oss.setf(ios::fixed);
+        oss.precision(precision);
+        oss << f;
+    }
+
+    return oss.str();
 }
 
 /*
@@ -72,19 +106,32 @@ class Term
     // friend ostream &operator<<(const ostream &output, const Term term);
     friend istream &operator>>(istream &input, Polynomial &poly);
 
+    // #DEBUG
+    friend ostream &operator<<(ostream &output, const Polynomial &poly);
+
 public:
     Term(float coef_ = 0.0f, int exp_ = 0) : coef(coef_), exp(exp_) {};
     // Term operator=(const Term &that) {};
     string to_string(bool with_posSign = false)
     {
+        // cout << "term.coef" << coef << ", " << "term.exp" << exp << endl; // DEBUG
         string str = "";
-        if (!this->coef)
-            return str;
-        if (this->coef < 0)
+        if (iszero(this->coef))
+            return "0";
+        // if (this->coef < 0)
+        //     str += '-';
+        // else if (with_posSign)
+        if (this->coef > 0 || float_equal(this->coef, 0))
+        {
+            if (with_posSign)
+                str += '+';
+        }
+        else
+        {
             str += '-';
-        else if (with_posSign)
-            str += '+';
-        str += std::to_string(this->coef);
+        }
+        if ((!float_equal(fabs(this->coef), 1)) || !this->exp)
+            str += ftos_pro(fabs(this->coef));
         if (!this->exp)
             return str;
         str += 'x';
@@ -93,6 +140,9 @@ public:
             str += '^';
             str += std::to_string(this->exp);
         }
+        if (str == "")
+            return "0";
+        str += " ";
         return str;
     };
 
@@ -114,14 +164,97 @@ template <typename T, typename CMP>
 class Heap
 {
 public:
-    Heap() {};
-    ~Heap() {};
-    T pop() {};
-    T popush(T replace_) {};
+    Heap(size_t capacity_, const CMP &comp = CMP()) : size(0), _capacity(__bit_ceil(capacity_))
+    {
+        heapArray = new T[_capacity];
+    };
+    ~Heap()
+    {
+        delete[] heapArray;
+    };
+    void buildHeap(T *array_, size_t size_) {
+        if (this->_capacity < size_) {
+            _resize(size_);
+        }
+        this->_size = size_;
+        copy(array_, array_ + size_, this->heapArray);
+        for(int i = (size_ / 2) - 1; i >= 0; --i) {
+            _heapify_down(i);
+        }
+    };
+    bool isEmpty()
+    {
+        return !_size;
+    };
+    const T &top() const
+    {
+        return heapArray[0];
+    };
+    T extract() {
+        if (!_size) {
+            throw std::out_of_range("Heap is empty.");
+        }
+        T old_value = heapArray[0];
+        heapArray[0] = heapArray[--_size];
+        if (_size > 1) {
+            _heapify_down(0);
+        }
+        return old_value;
+    };
+    T replace(const T& value) {
+        if (!_size) {
+            throw std::out_of_range("Heap is empty.");
+        }
+        T old_value = heapArray[0];
+        heapArray[0] = value;
+        if (_size > 1) {
+            _heapify_down(0);
+        }
+        return old_value;
+    };
+    // T pop() {};
+    // T popush(T replace_) {};
 
 private:
-    void _heapify(size_t d_index = 0) {};
+    void _resize(size_t capacity_) {
+        // have to fix when "reducing capacity"
+
+        size_t new_capacity = __bit_ceil(capacity_);
+        T *temp = heapArray;
+        heapArray = new T[new_capacity];
+        copy(temp, temp + _size, heapArray);
+        delete[] temp;
+        _capacity = new_capacity;
+    };
+    void _heapify_down(size_t index = 0) {
+        size_t left = i_left(index);
+        size_t right = i_right(index);
+        size_t smallest = index;    // pre
+
+        // cmp left chil-node
+        if ((left < _size) && _comparator(heapArray[left], heapArray[smallest])) {
+            smallest = left;
+        }
+
+        // cmp right chil-node
+        if ((right < _size) && _comparator(heapArray[right], heapArray[smallest])) {
+            smallest = right;
+        }
+
+        // cont
+        if (smallest != index) {
+            swap(heapArray[index], heapArray[smallest]);
+            _heapify_down(smallest);
+        }
+    };
+    size_t i_parent(size_t i) { return (i - 1) / 2; };
+    size_t i_left(size_t i) { return 2 * i + 1; };
+    size_t i_right(size_t i) { return 2 * i + 2; };
+
+    T *heapArray;
     size_t _size;
+    size_t _capacity;
+    CMP _comparator;
 };
 
 // #TODO add a operator&&()
@@ -132,8 +265,9 @@ class Polynomial
 
 public:
     // Construct the polynomial p(x) = 0.
-    Polynomial(int length = 0) : capacity(_bit_ceil(length))
+    Polynomial(int length = 1) : capacity(__bit_ceil(length)), terms(0)
     {
+        this->is_sorted = true;
         termArray = new Term[length];
     };
 
@@ -141,6 +275,7 @@ public:
     Polynomial(const Polynomial &that) : Polynomial(that.capacity)
     {
         this->terms = that.terms;
+        this->is_sorted = that.is_sorted;
         for (int i = 0; i < terms; ++i)
         {
             this->termArray[i] = that.termArray[i];
@@ -154,8 +289,12 @@ public:
     };
 
     // Return the sum of the polynomials *this and poly.
-    Polynomial Add(const Polynomial that)
+    Polynomial Add(Polynomial that)
     {
+        if (!this->is_sorted)
+            this->_sort();
+        if (!that.is_sorted)
+            that._sort();
         int temp_capacity = this->capacity + that.capacity;
         if (!temp_capacity)
             return Polynomial();
@@ -202,8 +341,13 @@ public:
     };
 
     // Return the product of the polynomials *this and poly.
+    // #TODO #TODO
     Polynomial Mult(Polynomial that)
     {
+        if (!this->is_sorted)
+            this->_sort();
+        if (!that.is_sorted)
+            that._sort();
         Polynomial poly;
         return poly;
     };
@@ -219,17 +363,50 @@ public:
         return temp;
     };
 
-    // add a term
-    Polynomial &term_add(float coef, int exp)
+    // add a term into the poly
+    Polynomial &add(float coef, int exp)
     {
-        return term_add(Term(coef, exp));
+        return add(Term(coef, exp));
     };
-    Polynomial &term_add(Term term)
+    Polynomial &add(const Term &term)
     {
+        // find the correct index by "_find"
+        // if the index == terms
+        //      do append and return
+        // else do
+        // cut to "2 paragraphs"
+        // new mem
+        // paste 1st paragraph
+        // paste adding or merge with the last term of 1st paragraph
+        // paste 2nd paragraph
+        return *this;
+    };
+
+    // append a term at the end
+    /*
+        !#WARNING!! this method is different with add
+        this method WILL "**append** a new term at the end"
+        AND WILL NOT do any "sort" or "merging equal exp terms"
+    */
+    Polynomial &term_append(float coef, int exp)
+    {
+        return term_append(Term(coef, exp));
+    };
+    // append a term at the end
+    /*
+        !#WARNING!! this method is different with add
+        this method WILL "**append** a new term at the end"
+        AND WILL NOT do any "sort" or "merging equal exp terms"
+    */
+    Polynomial &term_append(const Term &term)
+    {
+        if ((terms > 0) && !(termArray[terms - 1].exp < term.exp))
+            this->is_sorted = false;
         if (capacity == terms)
             _upgrade_capacity();
-        termArray[terms - 1] = term;
-        terms++;
+        termArray[terms] = term;
+        ++terms;
+        // this->debug();
         return *this;
     };
 
@@ -238,6 +415,19 @@ public:
 
     // copy operators
     // Polynomial &operator=(Polynomial &that) {};
+
+    void debug()
+    {
+        cout << "-------- -------- --------" << endl;
+        cout << "terms: " << this->terms << endl;
+        // cout << "terms: " << this->terms << endl;
+        for (int i = 0; i < terms; ++i)
+        {
+            cout << termArray[i].to_string() << " ";
+        }
+        cout << endl;
+        cout << "-------- -------- --------" << endl;
+    };
 
 private:
     void _upgrade_capacity()
@@ -252,6 +442,7 @@ private:
 
     void _sort()
     {
+        this->is_sorted = true;
         if (terms <= 1)
             return;
         auto q_sort = [&](auto &self, int left, int right) mutable -> void
@@ -289,10 +480,11 @@ private:
         int new_terms = 0;
         for (int i = 0, j = 0; i < terms; i = j, ++new_terms)
         {
-            temp[i] = termArray[i];
+            temp[new_terms] = termArray[i];
             for (j = i + 1; (j < terms) && (termArray[i].exp == termArray[j].exp); ++j)
             {
-                temp[i].coef += termArray[j].coef;
+                temp[new_terms].coef += termArray[j].coef;
+                // ++new_terms;
             }
         }
         delete[] termArray;
@@ -303,13 +495,15 @@ private:
         _dump();
     };
 
-    void _dump(double coef = 0, int exp = 0)
+    void _dump(double coef = 0)
     {
+        if (terms <= 0 || capacity <= 0)
+            return;
         Term *temp = new Term[capacity];
         int new_terms = 0;
         for (int i = 0; i < terms; ++i)
         {
-            if ((termArray[i].exp != exp) || (termArray[i].coef != coef))
+            if (!(float_equal(termArray[i].coef, coef)))
             {
                 temp[new_terms] = termArray[i];
                 ++new_terms;
@@ -320,6 +514,7 @@ private:
         terms = new_terms;
     };
 
+    // #TODO let "_find" finding the index which nearest but equals or greater than goal
     // binary search; # return index, -1 if not exists
     int _find(int exp)
     {
@@ -347,8 +542,9 @@ private:
     };
 
     Term *termArray; // array of nonzero terms
-    int capacity;    // size of termArray
-    int terms;       // number of nonzero terms
+    bool is_sorted;
+    int capacity; // size of termArray
+    int terms;    // number of nonzero terms
 };
 
 // ostream &operator<<(ostream &output, const Term &term) {
@@ -357,34 +553,75 @@ private:
 // #TODO make "2x^4+(2x^4+1)" supports
 istream &operator>>(istream &input, Polynomial &poly)
 {
-    Term term;
     string coef_str = "0", exp_str = "0";
     int c = input.peek();
+    // cout << "debug:" << (char)c << endl; // DEBUG
     for (
-        int sign = 1;
+        int sign = 1,
+            has_coef = 0;
 
         (c != EOF) && (c != '\n');
 
         c = input.peek(),
-            sign = 1,
+            sign = 0,
+            has_coef = 0,
             coef_str = "0",
-            exp_str = "0",
-            term = Term())
+            exp_str = "0")
     {
+        if (
+            // unacceptable char
+            c != ' ' &&
+            c != '+' &&
+            c != '-' &&
+            !isdigit(c) &&
+            c != '.' &&
+            c != 'x')
+        {
+            input.setstate(std::ios::failbit);
+            return input;
+        }
+
+        Term term;
+
+        // remove space
+        while (c == ' ')
+        {
+            input.get();
+            c = input.peek();
+        }
+
         // sign
         // [+-..][0~9..][x][^][0~9..]
+        // #TODO must to make "+++" / "----"/ "+-+-" unacceptable
         while ((c == '+') || (c == '-'))
         {
             if (c == '-')
-                sign *= -1;
+                (sign *= -1) || (sign = -1);
+            else
+                sign || (sign = 1);
             input.get();
             c = input.peek();
+
+            // remove space
+            while (c == ' ')
+            {
+                input.get();
+                c = input.peek();
+            }
+        }
+
+        // if no sign
+        if (!sign)
+        {
+            input.setstate(std::ios::failbit);
+            return input;
         }
 
         // coefficient
         // integer part
         while (isdigit(c))
         {
+            has_coef = 1;
             coef_str += c;
             input.get();
             c = input.peek();
@@ -392,9 +629,15 @@ istream &operator>>(istream &input, Polynomial &poly)
         // decimals part
         if (c == '.')
         {
+            has_coef = 1;
             coef_str += '.';
             input.get();
             c = input.peek();
+            if (coef_str == "0." && !isdigit(c))
+            {
+                input.setstate(std::ios::failbit);
+                return input;
+            }
             while (isdigit(c))
             {
                 coef_str += c;
@@ -402,21 +645,35 @@ istream &operator>>(istream &input, Polynomial &poly)
                 c = input.peek();
             }
         }
-        term.coef = std::stof(coef_str) * sign;
+        if (has_coef)
+            term.coef = std::stof(coef_str) * sign;
+        else
+            term.coef = sign;
 
         // x & its exponent
         if (c == 'x')
         {
-            if (!term.coef)
-                term.coef = sign;
+            // if (float_equal(term.coef, 0))
+            //     term.coef = sign;
             input.get();
             c = input.peek();
-            if (c != '^') // exp =1
+
+            // remove space
+            while (c == ' ')
             {
-                term.exp = 1;
+                input.get();
+                c = input.peek();
             }
-            else // exp > 1
+
+            if (c == '^') // exp >1
             {
+                // remove space
+                while (c == ' ')
+                {
+                    input.get();
+                    c = input.peek();
+                }
+
                 input.get();
                 c = input.peek();
                 sign = 1;
@@ -427,13 +684,31 @@ istream &operator>>(istream &input, Polynomial &poly)
                     input.get();
                     c = input.peek();
                 }
+
+                // remove space
+                while (c == ' ')
+                {
+                    input.get();
+                    c = input.peek();
+                }
+
+                if (!isdigit(c))
+                {
+                    input.setstate(std::ios::failbit);
+                    return input;
+                }
                 while (isdigit(c)) // exp getting
                 {
                     exp_str += c;
                     input.get();
                     c = input.peek();
                 }
-                term.exp = std::stoi(exp_str) * sign;
+                if (!term.exp)
+                    term.exp = std::stoi(exp_str) * sign;
+            }
+            else // exp = 1
+            {
+                term.exp = 1;
             };
         }
         else
@@ -442,18 +717,24 @@ istream &operator>>(istream &input, Polynomial &poly)
         }
 
         // set
-        poly.term_add(term);
-
+        poly.term_append(term);
+        // cout << "debug" << coef_str << ", " << exp_str << "; " << term.to_string() << endl; // DEBUG
     };
-    // isdigit('.');
-    // isdigit('a');
+    input.get(); // for "\n"
+    poly._sort();
     return input;
 };
 ostream &operator<<(ostream &output, const Polynomial &poly)
 {
-    for (int i = poly.terms - 1; i >= 0; ++i)
+    if (poly.terms <= 0)
     {
-        output << poly.termArray[i].to_string(i);
+        output << "0" << endl;
+        return output;
+    }
+    for (int i = 0; i < poly.terms; ++i)
+    {
+        // cout << "debug: " << poly.termArray[poly.terms - i - 1].coef << ", " << poly.termArray[poly.terms - i - 1].exp << endl;
+        output << poly.termArray[poly.terms - i - 1].to_string(i);
     }
     output << endl;
     return output;
@@ -461,8 +742,22 @@ ostream &operator<<(ostream &output, const Polynomial &poly)
 
 int main()
 {
-    Polynomial poly;
-    cin >> poly;
-    cout << poly;
+    // v for test
+    while (true)
+    {
+        Polynomial poly;
+        cout << "> ";
+        if (!(cin >> poly))
+        {
+            if (cin.eof())
+                break;
+            cout << "Unacceptable input." << endl;
+            cin.clear();
+            std::cin.ignore(INT_MAX, '\n');
+            continue;
+        }
+        cout << poly;
+        // poly.debug();
+    }
     return 0;
 }

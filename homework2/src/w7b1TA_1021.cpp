@@ -55,7 +55,7 @@ void term_quick_sort_by_exp(Term arr[], int size)
 }
 
 // std::bit_ceil    // #include <bit>
-unsigned int _bit_ceil(unsigned int n)
+unsigned int __bit_ceil(unsigned int n)
 {
     if (!n)
         return 1;
@@ -100,7 +100,7 @@ class Polynomial
 
 public:
     // Construct the polynomial p(x) = 0.
-    Polynomial(int length = 0) : capacity(_bit_ceil(length))
+    Polynomial(int length = 0) : capacity(__bit_ceil(length))
     {
         termArray = new Term[length];
     };

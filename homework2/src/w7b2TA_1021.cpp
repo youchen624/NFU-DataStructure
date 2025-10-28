@@ -50,7 +50,8 @@ void narrow(Term arr[], int size)
 {
     for (int i = 0, j = 1; i < size; j = i + 1)
     {
-        for (;j < size && arr[i].exp == arr[j].exp; ++j) {
+        for (; j < size && arr[i].exp == arr[j].exp; ++j)
+        {
             arr[i].coef += arr[j].coef;
             arr[j].coef = 0;
         }
@@ -58,12 +59,15 @@ void narrow(Term arr[], int size)
     }
 };
 
-void display(Term arr[], int size) {
-    for (int i = 0; i < size; ++i) {
-        if(!arr[i].coef) continue;
-        string str = (arr[i].exp) ? (string("x") + ((arr[i].exp == 1) ? string(""): (string("^") + to_string(arr[i].exp)))) : string("");
+void display(Term arr[], int size)
+{
+    for (int i = 0; i < size; ++i)
+    {
+        if (!arr[i].coef)
+            continue;
+        string str = (arr[i].exp) ? (string("x") + ((arr[i].exp == 1) ? string("") : (string("^") + to_string(arr[i].exp)))) : string("");
         cout << arr[i].coef << str;
-        if ((i+1) < size && arr[i+1].coef < 0)
+        if ((i + 1) < size && arr[i + 1].coef < 0)
             cout << "-";
         else
             cout << "+";
@@ -85,9 +89,4 @@ int main()
         cin >> na[i].coef >> na[i].exp;
     }
     term_quick_sort(ma, m);
-    term_quick_sort(na, n);
-    narrow(ma, m);
-    narrow(na, n);
-    display(ma, m);
-    display(na, n);
 }
