@@ -1,3 +1,4 @@
+// !! ATTENTION !! must using C++14 or above
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -142,7 +143,7 @@ public:
         }
         if (str == "")
             return "0";
-        str += " ";
+        // str += " ";
         return str;
     };
 
@@ -164,7 +165,7 @@ template <typename T, typename CMP>
 class Heap
 {
 public:
-    Heap(size_t capacity_, const CMP &comp = CMP()) : size(0), _capacity(__bit_ceil(capacity_))
+    Heap(size_t capacity_, const CMP &comp = CMP()) : _size(0), _capacity(__bit_ceil(capacity_))
     {
         heapArray = new T[_capacity];
     };
@@ -172,6 +173,8 @@ public:
     {
         delete[] heapArray;
     };
+    
+    // build the Heap with array
     void buildHeap(T *array_, size_t size_) {
         if (this->_capacity < size_) {
             _resize(size_);
@@ -182,6 +185,7 @@ public:
             _heapify_down(i);
         }
     };
+    
     bool isEmpty()
     {
         return !_size;
@@ -190,6 +194,8 @@ public:
     {
         return heapArray[0];
     };
+
+    // get an obj back, AND NOT replace a new
     T extract() {
         if (!_size) {
             throw std::out_of_range("Heap is empty.");
@@ -201,6 +207,8 @@ public:
         }
         return old_value;
     };
+
+    // get an obj back, AND replace a new
     T replace(const T& value) {
         if (!_size) {
             throw std::out_of_range("Heap is empty.");
@@ -212,8 +220,6 @@ public:
         }
         return old_value;
     };
-    // T pop() {};
-    // T popush(T replace_) {};
 
 private:
     void _resize(size_t capacity_) {
@@ -300,21 +306,21 @@ public:
             return Polynomial();
         int this_ti = 0, that_ti = 0, main_ti = 0;
         Polynomial temp_poly(temp_capacity);
-        bool avail_this = (this_ti < this->capacity);
-        bool avail_that = (that_ti < that.capacity);
+        bool avail_this = (this_ti < this->terms);
+        bool avail_that = (that_ti < that.terms);
         for (
             ; avail_this || avail_that;
-            avail_this = (this_ti < this->capacity),
-            avail_that = (that_ti < that.capacity))
+            avail_this = (this_ti < this->terms),
+            avail_that = (that_ti < that.terms))
         {
             int this_exp = avail_this ? this->termArray[this_ti].exp : INT_MAX;
             int that_exp = avail_that ? that.termArray[that_ti].exp : INT_MAX;
             if (this_exp == that_exp)
             {
-                const int temp_coef = this->termArray[this_ti].coef + that.termArray[that_ti].coef;
+                const double temp_coef = this->termArray[this_ti].coef + that.termArray[that_ti].coef;
                 ++this_ti;
                 ++that_ti;
-                if (!temp_coef)
+                if (float_equal(temp_coef, 0.0))
                     continue;
                 temp_poly.termArray[main_ti].coef = temp_coef;
                 temp_poly.termArray[main_ti].exp = this_exp;
@@ -331,12 +337,13 @@ public:
                 temp_poly.termArray[main_ti].exp = that_exp;
                 ++that_ti;
             }
-            ++main_ti;
+            temp_poly.terms = ++main_ti;
         }
         if (temp_capacity == main_ti)
-            return temp_capacity;
+            return temp_poly;
         Polynomial final_poly(main_ti);
-        copy(temp_poly.termArray, temp_poly.termArray + main_ti - 1, final_poly.termArray);
+        final_poly.terms = main_ti;
+        copy(temp_poly.termArray, temp_poly.termArray + main_ti, final_poly.termArray);
         return final_poly;
     };
 
@@ -348,6 +355,8 @@ public:
             this->_sort();
         if (!that.is_sorted)
             that._sort();
+
+        //
         Polynomial poly;
         return poly;
     };
@@ -415,11 +424,15 @@ public:
 
     // copy operators
     // Polynomial &operator=(Polynomial &that) {};
+    // Polynomial &operator+(const Polynomial &that) {
+    //     return this->Add(that);
+    // };
 
     void debug()
     {
         cout << "-------- -------- --------" << endl;
         cout << "terms: " << this->terms << endl;
+        cout << "capacity: " << this->capacity << endl;
         // cout << "terms: " << this->terms << endl;
         for (int i = 0; i < terms; ++i)
         {
@@ -728,15 +741,16 @@ ostream &operator<<(ostream &output, const Polynomial &poly)
 {
     if (poly.terms <= 0)
     {
-        output << "0" << endl;
+        output << "0"; // << endl;
         return output;
     }
     for (int i = 0; i < poly.terms; ++i)
     {
         // cout << "debug: " << poly.termArray[poly.terms - i - 1].coef << ", " << poly.termArray[poly.terms - i - 1].exp << endl;
         output << poly.termArray[poly.terms - i - 1].to_string(i);
+        if (i < poly.terms - 1) output << " ";
     }
-    output << endl;
+    // output << endl;
     return output;
 };
 
@@ -745,9 +759,9 @@ int main()
     // v for test
     while (true)
     {
-        Polynomial poly;
+        Polynomial poly1, poly2, poly3;
         cout << "> ";
-        if (!(cin >> poly))
+        if (!(cin >> poly1 >> poly2))
         {
             if (cin.eof())
                 break;
@@ -756,7 +770,7 @@ int main()
             std::cin.ignore(INT_MAX, '\n');
             continue;
         }
-        cout << poly;
+        cout << "(" << poly1 << ") + (" << poly2 << ") = \n" << poly1.Add(poly2);
         // poly.debug();
     }
     return 0;
