@@ -10,6 +10,8 @@
 #define INT_MAX 2147483647
 // float 允許誤差
 #define EPS 1e-6f
+// exponent
+const wchar_t EXP_N[] = L"⁰¹²³⁴⁵⁶⁷⁸⁹";
 
 using namespace std;
 
@@ -322,7 +324,7 @@ private:
 class Polynomial
 {
     friend istream &operator>>(istream &input, Polynomial &poly);
-    friend ostream &operator<<(ostream &output, const Polynomial &poly);
+    friend ostream &operator<<(ostream &output, Polynomial &poly);
 
 public:
     // Construct the polynomial p(x) = 0.
@@ -471,6 +473,7 @@ public:
 
     // Evaluate the polynomial *this at f and return the result.
     float Eval(float f)
+            // oh yeah these was a evil
     {
         float temp = 0;
         for (int i = 0; i < terms; ++i)
@@ -490,6 +493,7 @@ public:
     {
         return add(Term(coef, exp));
     };
+    // add a term into the poly #TODO
     Polynomial &add(const Term &term)
     {
         // find the correct index by "_find"
@@ -536,10 +540,27 @@ public:
     // Polynomial &term_set(int index, float coef, int exp) {};
 
     // copy operators
-    // Polynomial &operator=(Polynomial &that) {};
-    // Polynomial &operator+(const Polynomial &that) {
-    //     return this->Add(that);
-    // };
+    Polynomial &operator=(const Polynomial &that)
+    {
+        if (this->capacity < that.terms)
+        {
+            _upgrade_capacity(__bit_ceil(that.capacity / this->capacity));
+        }
+        this->terms = that.terms;
+        this->is_sorted = that.is_sorted;
+        for (int i = 0; i < terms; ++i)
+        {
+            this->termArray[i] = that.termArray[i];
+        }
+    };
+    Polynomial &operator+(const Polynomial &that)
+    {
+        return this->Add(that);
+    };
+    Polynomial &operator*(const Polynomial &that) {
+        Polynomial temp = that;
+        return this->Mult(that);
+    };
 
     void debug()
     {
@@ -556,11 +577,11 @@ public:
     };
 
 private:
-    void _upgrade_capacity()
+    void _upgrade_capacity(int multiplier = 2)
     {
         Term *temp_ptr = termArray;
         int tc = capacity;
-        capacity *= 2;
+        capacity *= multiplier;
         termArray = new Term[capacity];
         copy(temp_ptr, temp_ptr + tc, termArray);
         delete[] temp_ptr;
@@ -858,8 +879,9 @@ istream &operator>>(istream &input, Polynomial &poly)
     poly._sort();
     return input;
 };
-ostream &operator<<(ostream &output, const Polynomial &poly)
+ostream &operator<<(ostream &output, Polynomial &poly)
 {
+    poly._sort();
     if (poly.terms <= 0)
     {
         output << "0"; // << endl;
