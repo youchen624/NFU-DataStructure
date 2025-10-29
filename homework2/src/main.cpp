@@ -380,7 +380,8 @@ public:
             }
             else if (this_exp < that_exp)
             {
-                if (!this_exp) {
+                if (this->termArray[this_ti].iszero())
+                {
                     ++this_ti;
                     continue;
                 }
@@ -390,7 +391,8 @@ public:
             }
             else
             {
-                if (!that_exp) {
+                if (that.termArray[this_ti].iszero())
+                {
                     ++that_ti;
                     continue;
                 }
@@ -630,7 +632,7 @@ private:
         int new_terms = 0;
         for (int i = 0; i < terms; ++i)
         {
-            if (!termArray[i].iszero()) //float_equal(termArray[i].coef, coef))) // 0?
+            if (!termArray[i].iszero()) // float_equal(termArray[i].coef, coef))) // 0?
             {
                 temp[new_terms] = termArray[i];
                 ++new_terms;
@@ -776,7 +778,8 @@ istream &operator>>(istream &input, Polynomial &poly)
             term.coef = std::stof(coef_str) * sign;
         else if (c == 'x')
             term.coef = sign;
-        else {
+        else
+        {
             input.setstate(std::ios::failbit);
             return input;
         } // term.coef = 0;
@@ -875,6 +878,23 @@ ostream &operator<<(ostream &output, const Polynomial &poly)
 
 int main()
 {
+    /*  // input test
+    do {
+        Polynomial poly;
+        cout << "> ";
+        if (!(cin >> poly))
+        {
+            if (cin.eof())
+            break;
+            cout << "Unacceptable input." << endl;
+            cin.clear();
+            std::cin.ignore(INT_MAX, '\n');
+            continue;
+        }
+        cout << poly;
+    } while(0);
+    */
+
     // v for test
     while (true)
     {
