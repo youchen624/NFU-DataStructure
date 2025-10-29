@@ -115,7 +115,8 @@ public:
     // Term operator=(const Term &that) {};
 
     // only add the coef, set exp as that
-    void c_add(const Term& that) {
+    void c_add(const Term &that)
+    {
         this->exp = that.exp;
         this->coef += that.coef;
     };
@@ -128,7 +129,7 @@ public:
     {
         // cout << "term.coef" << coef << ", " << "term.exp" << exp << endl; // DEBUG
         string str = "";
-        if (iszero(this->coef))
+        if (iszero())
             return "0";
         // if (this->coef < 0)
         //     str += '-';
@@ -158,14 +159,21 @@ public:
         return str;
     };
 
-    int get_exp() const {
+    int get_exp() const
+    {
         return this->exp;
     };
-    float get_coef() const {
+    float get_coef() const
+    {
         return this->coef;
     };
+    bool iszero()
+    {
+        return ::iszero(this->coef);
+    };
 
-    Term operator*(const Term& that) {
+    Term operator*(const Term &that)
+    {
         return Term(this->coef * that.coef, this->exp + that.exp);
     };
 
@@ -191,12 +199,14 @@ template <typename T>
 class Heap
 {
 public:
-    using CMP = bool(*)(const T&, const T&);
+    using CMP = bool (*)(const T &, const T &);
     Heap(size_t capacity_, CMP comp = nullptr) : _size(0), _capacity(__bit_ceil(capacity_))
     {
         heapArray = new T[_capacity];
-        if (!_comparator) {
-            _comparator = [](const T &a, const T &b){ return a.get_exp() < b.get_exp(); };
+        if (!_comparator)
+        {
+            _comparator = [](const T &a, const T &b)
+            { return a.get_exp() < b.get_exp(); };
         }
     };
     ~Heap()
@@ -263,7 +273,7 @@ public:
 private:
     void _resize(size_t capacity_)
     {
-        // have to fix when "reducing capacity"
+        // #TODO have to fix when "reducing capacity"
 
         size_t new_capacity = __bit_ceil(capacity_);
         T *temp = heapArray;
@@ -342,10 +352,8 @@ public:
     // Return the sum of the polynomials *this and poly.
     Polynomial Add(Polynomial that)
     {
-        if (!this->is_sorted)
-            this->_sort();
-        if (!that.is_sorted)
-            that._sort();
+        this->_sort();
+        that._sort();
         int temp_capacity = this->capacity + that.capacity;
         if (!temp_capacity)
             return Polynomial();
@@ -372,12 +380,20 @@ public:
             }
             else if (this_exp < that_exp)
             {
+                if (!this_exp) {
+                    ++this_ti;
+                    continue;
+                }
                 temp_poly.termArray[main_ti].coef = this->termArray[this_ti].coef;
                 temp_poly.termArray[main_ti].exp = this_exp;
                 ++this_ti;
             }
             else
             {
+                if (!that_exp) {
+                    ++that_ti;
+                    continue;
+                }
                 temp_poly.termArray[main_ti].coef = that.termArray[that_ti].coef;
                 temp_poly.termArray[main_ti].exp = that_exp;
                 ++that_ti;
@@ -395,10 +411,16 @@ public:
     // Return the product of the polynomials *this and poly.
     Polynomial Mult(Polynomial that)
     {
-        if (!this->is_sorted)
-            this->_sort();
-        if (!that.is_sorted)
-            that._sort();
+        if (this->iszero() || that.iszero())
+            return Polynomial();
+        if ((this->terms == 1) && (that.terms == 1))
+        {
+            Polynomial poly;
+            poly.term_append(this->termArray[0] * that.termArray[0]);
+            return poly;
+        }
+        this->_sort();
+        that._sort();
 
         Polynomial *poly_cheaper = this, *poly_greater = &that;
         if (poly_cheaper->terms > poly_greater->terms)
@@ -410,7 +432,8 @@ public:
         // initial a Heap (prepare)
         Heap<Term> heap(sml_terms, term_isExpLess);
         Term *terray = new Term[sml_terms]; // very temp using
-        for (size_t i = 0; i < sml_terms; ++i) {
+        for (size_t i = 0; i < sml_terms; ++i)
+        {
             terray[i] = poly_cheaper->termArray[i] * poly_greater->termArray[0];
         }
         heap.buildHeap(terray, sml_terms);
@@ -418,23 +441,28 @@ public:
 
         // start multiing
         size_t c_i = 0, g_i = 1;
-        Term temp;  // where is the first term?? #TODO
-        do {
+        Term temp; // where is the first term?? #TODO
+        do
+        {
             Term t_term;
-            do {
+            do
+            {
                 // add
                 t_term.c_add(temp);
                 // 抓
-                if ((c_i < sml_terms) && !(g_i < poly_greater->terms)) {
+                if ((c_i < sml_terms) && !(g_i < poly_greater->terms))
+                {
                     c_i = 0;
                     ++g_i;
                 };
                 temp = ((g_i < poly_greater->terms) && (c_i < sml_terms))
-                    ? heap.replace(poly_cheaper->termArray[c_i++] * poly_greater->termArray[g_i])
-                    : heap.extract();
+                           ? heap.replace(poly_cheaper->termArray[c_i++] * poly_greater->termArray[g_i])
+                           : heap.extract();
             } while (t_term.exp == temp.exp);
-            poly_temp.term_append(t_term);
-        } while (!heap.isEmpty());  // where is the last term?? #TODO (when Empty, it will still at "temp")
+            if (!t_term.iszero())
+                poly_temp.term_append(t_term);
+        } while (!heap.isEmpty()); // where is the last term?? #TODO (when Empty, it still at "temp")
+        poly_temp.term_append(temp);
 
         return poly_temp;
     };
@@ -448,6 +476,11 @@ public:
             temp += termArray[i].coef * pow(f, termArray[i].exp);
         }
         return temp;
+    };
+    bool iszero()
+    {
+        _sort();
+        return (!terms || ((terms <= 1) && termArray[0].iszero()));
     };
 
     // add a term into the poly
@@ -533,6 +566,8 @@ private:
 
     void _sort()
     {
+        if (this->is_sorted)
+            return;
         this->is_sorted = true;
         if (terms <= 1)
             return;
@@ -595,7 +630,7 @@ private:
         int new_terms = 0;
         for (int i = 0; i < terms; ++i)
         {
-            if (!(float_equal(termArray[i].coef, coef)))
+            if (!termArray[i].iszero()) //float_equal(termArray[i].coef, coef))) // 0?
             {
                 temp[new_terms] = termArray[i];
                 ++new_terms;
@@ -739,8 +774,12 @@ istream &operator>>(istream &input, Polynomial &poly)
         }
         if (has_coef)
             term.coef = std::stof(coef_str) * sign;
-        else
+        else if (c == 'x')
             term.coef = sign;
+        else {
+            input.setstate(std::ios::failbit);
+            return input;
+        } // term.coef = 0;
 
         // x & its exponent
         if (c == 'x')
@@ -840,8 +879,16 @@ int main()
     while (true)
     {
         Polynomial poly1, poly2, poly3;
-        cout << "> ";
-        if (!(cin >> poly1 >> poly2))
+        try
+        {
+            cout << "Enter the first poly:\n> ";
+            if (!(cin >> poly1))
+                throw -1;
+            cout << "Enter the second poly:\n> ";
+            if (!(cin >> poly2))
+                throw -1;
+        }
+        catch (const int error)
         {
             if (cin.eof())
                 break;
@@ -849,7 +896,7 @@ int main()
             cin.clear();
             std::cin.ignore(INT_MAX, '\n');
             continue;
-        }
+        };
         cout << "(" << poly1 << ") + (" << poly2 << ") = \n"
              << poly1.Add(poly2) << endl;
         cout << "(" << poly1 << ") x (" << poly2 << ") = \n"
