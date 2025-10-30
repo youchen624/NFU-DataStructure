@@ -114,11 +114,7 @@ class Term
 
 public:
     Term(float coef_ = 0.0f, int exp_ = 0) : coef(coef_), exp(exp_) {};
-    Term operator=(const Term &that) {
-        this->coef = that.coef;
-        this->exp = that.exp;
-        return *this;
-    };
+    // Term operator=(const Term &that) {};
 
     // only add the coef, set exp as that
     void c_add(const Term &that)
@@ -131,7 +127,7 @@ public:
     //     this->coef = that.coef;
     // };
 
-    string to_string(bool with_posSign = false) const
+    string to_string(bool with_posSign = false)
     {
         // cout << "term.coef" << coef << ", " << "term.exp" << exp << endl; // DEBUG
         string str = "";
@@ -173,7 +169,7 @@ public:
     {
         return this->coef;
     };
-    bool iszero() const
+    bool iszero()
     {
         return ::iszero(this->coef);
     };
@@ -206,7 +202,7 @@ class Heap
 {
 public:
     using CMP = bool (*)(const T &, const T &);
-    Heap(size_t capacity_, CMP comp = nullptr) : _size(0), _capacity(__bit_ceil(capacity_)), _comparator(comp)
+    Heap(size_t capacity_, CMP comp = nullptr) : _size(0), _capacity(__bit_ceil(capacity_))
     {
         heapArray = new T[_capacity];
         if (!_comparator)
@@ -335,7 +331,7 @@ public:
     Polynomial(int length = 1) : capacity(__bit_ceil(length)), terms(0)
     {
         this->is_sorted = true;
-        termArray = new Term[capacity];
+        termArray = new Term[length];
     };
 
     // Copy constructor
@@ -343,7 +339,7 @@ public:
     {
         this->terms = that.terms;
         this->is_sorted = that.is_sorted;
-        for (int i = 0; i < that.terms; ++i)
+        for (int i = 0; i < terms; ++i)
         {
             this->termArray[i] = that.termArray[i];
         }
@@ -356,28 +352,27 @@ public:
     };
 
     // Return the sum of the polynomials *this and poly.
-    Polynomial Add(const Polynomial that) const
+    Polynomial Add(Polynomial that)
     {
-        Polynomial poly_this(*this), poly_that(that);
-        poly_this._sort();
-        poly_that._sort();
-        int temp_capacity = poly_this.capacity + poly_that.capacity;
+        this->_sort();
+        that._sort();
+        int temp_capacity = this->capacity + that.capacity;
         if (!temp_capacity)
             return Polynomial();
         int this_ti = 0, that_ti = 0, main_ti = 0;
         Polynomial temp_poly(temp_capacity);
-        bool avail_this = (this_ti < poly_this.terms);
-        bool avail_that = (that_ti < poly_that.terms);
+        bool avail_this = (this_ti < this->terms);
+        bool avail_that = (that_ti < that.terms);
         for (
             ; avail_this || avail_that;
-            avail_this = (this_ti < poly_this.terms),
-            avail_that = (that_ti < poly_that.terms))
+            avail_this = (this_ti < this->terms),
+            avail_that = (that_ti < that.terms))
         {
-            int this_exp = avail_this ? poly_this.termArray[this_ti].exp : INT_MAX;
-            int that_exp = avail_that ? poly_that.termArray[that_ti].exp : INT_MAX;
+            int this_exp = avail_this ? this->termArray[this_ti].exp : INT_MAX;
+            int that_exp = avail_that ? that.termArray[that_ti].exp : INT_MAX;
             if (this_exp == that_exp)
             {
-                const double temp_coef = poly_this.termArray[this_ti].coef + poly_that.termArray[that_ti].coef;
+                const double temp_coef = this->termArray[this_ti].coef + that.termArray[that_ti].coef;
                 ++this_ti;
                 ++that_ti;
                 if (float_equal(temp_coef, 0.0))
@@ -387,23 +382,23 @@ public:
             }
             else if (this_exp < that_exp)
             {
-                if (poly_this.termArray[this_ti].iszero())
+                if (this->termArray[this_ti].iszero())
                 {
                     ++this_ti;
                     continue;
                 }
-                temp_poly.termArray[main_ti].coef = poly_this.termArray[this_ti].coef;
+                temp_poly.termArray[main_ti].coef = this->termArray[this_ti].coef;
                 temp_poly.termArray[main_ti].exp = this_exp;
                 ++this_ti;
             }
             else
             {
-                if (poly_that.termArray[that_ti].iszero())
+                if (that.termArray[this_ti].iszero())
                 {
                     ++that_ti;
                     continue;
                 }
-                temp_poly.termArray[main_ti].coef = poly_that.termArray[that_ti].coef;
+                temp_poly.termArray[main_ti].coef = that.termArray[that_ti].coef;
                 temp_poly.termArray[main_ti].exp = that_exp;
                 ++that_ti;
             }
@@ -418,21 +413,20 @@ public:
     };
 
     // Return the product of the polynomials *this and poly.
-    Polynomial Mult(const Polynomial that) const
+    Polynomial Mult(Polynomial that)
     {
-        Polynomial poly_this(*this), poly_that(that);
-        if (poly_this.iszero() || poly_that.iszero())
+        if (this->iszero() || that.iszero())
             return Polynomial();
-        if ((poly_this.terms == 1) && (poly_that.terms == 1))
+        if ((this->terms == 1) && (that.terms == 1))
         {
             Polynomial poly;
-            poly.term_append(poly_this.termArray[0] * poly_that.termArray[0]);
+            poly.term_append(this->termArray[0] * that.termArray[0]);
             return poly;
         }
-        poly_this._sort();
-        poly_that._sort();
+        this->_sort();
+        that._sort();
 
-        Polynomial *poly_cheaper = &poly_this, *poly_greater = &poly_that;
+        Polynomial *poly_cheaper = this, *poly_greater = &that;
         if (poly_cheaper->terms > poly_greater->terms)
             swap(poly_cheaper, poly_greater);
         int sml_terms = poly_cheaper->terms;
@@ -450,7 +444,7 @@ public:
         delete[] terray;
 
         // start multiing
-        size_t c_i = -1, g_i = 1;
+        size_t c_i = 0, g_i = 1;
         Term temp; // where is the first term?? #TODO
         do
         {
@@ -460,32 +454,19 @@ public:
                 // add
                 t_term.c_add(temp);
                 // 抓
-                if (!(++c_i < sml_terms))
+                if ((c_i < sml_terms) && !(g_i < poly_greater->terms))
                 {
                     c_i = 0;
-                    if (!(g_i < poly_greater->terms))
-                    {
-                        c_i = sml_terms;
-                        // g_i
-                    }
-                    else
-                        ++g_i;
+                    ++g_i;
                 };
-                // if (!(g_i < poly_greater->terms))
-                // cout << "\nc_i: " << c_i << "\ng_i: " << g_i << endl;
-                temp = ((g_i < poly_greater->terms) || (c_i < sml_terms))
-                           ? heap.replace(poly_cheaper->termArray[c_i] * poly_greater->termArray[g_i])
+                temp = ((g_i < poly_greater->terms) && (c_i < sml_terms))
+                           ? heap.replace(poly_cheaper->termArray[c_i++] * poly_greater->termArray[g_i])
                            : heap.extract();
-                // cout << "\nc_i: " << c_i << endl;
             } while (t_term.exp == temp.exp);
             if (!t_term.iszero())
                 poly_temp.term_append(t_term);
         } while (!heap.isEmpty()); // where is the last term?? #TODO (when Empty, it still at "temp")
         poly_temp.term_append(temp);
-
-        // debug
-        // cout <<"debug:\n" << poly_temp << endl;
-        // #was-bug bc an unknown reason; but it auto disappeared....??
 
         return poly_temp;
     };
@@ -497,7 +478,6 @@ public:
         float temp = 0;
         for (int i = 0; i < terms; ++i)
         {
-            // if (float_equal(termArray[i].coef, 0.0)) continue;
             temp += termArray[i].coef * pow(f, termArray[i].exp);
         }
         return temp;
@@ -507,23 +487,6 @@ public:
         _sort();
         return (!terms || ((terms <= 1) && termArray[0].iszero()));
     };
-    /*
-    bool iszero() const
-    // shit method
-    {
-        Polynomial poly_this(*this);
-        return poly_this.iszero();
-        / *  // cause bug (when 2x-2x)
-        for (int i = 0; i < terms; ++i) {
-            if (!termArray[i].iszero())
-            return false;
-            else
-            continue;
-        }
-        return true;
-        * /
-    };
-    */
 
     // add a term into the poly
     Polynomial &add(float coef, int exp)
@@ -577,7 +540,7 @@ public:
     // Polynomial &term_set(int index, float coef, int exp) {};
 
     // operators
-    Polynomial operator=(const Polynomial &that)
+    Polynomial &operator=(const Polynomial &that)
     {
         if (this->capacity < that.terms)
         {
@@ -591,18 +554,20 @@ public:
         }
         return *this;
     };
-    Polynomial operator+(const Polynomial &that) const
+    /*
+    Polynomial &operator+(const Polynomial &that)
     {
         return this->Add(that);
     };
-    Polynomial operator*(const Polynomial &that) const {
+    Polynomial &operator*(const Polynomial &that) const {
         Polynomial temp = that;
         return this->Mult(that);
     };
-
+    
     float operator()(const float f) const {
         return Eval(f);
     };
+    */
 
     void debug()
     {
@@ -987,11 +952,9 @@ int main()
              << poly1.Add(poly2) << endl;
         cout << "(" << poly1 << ") x (" << poly2 << ") = \n"
              << poly3 << endl;
-        cout << "Enter the x:\n> ";
-        cin >> f;
-        cout << poly3 << "(x=" << f << ") = "<< poly3(f) << endl;
-            cin.clear();
-            std::cin.ignore(INT_MAX, '\n');
+        // cout << "Enter the x:\n> ";
+        // cin >> f;
+        // cout << poly3(f) << endl;
         // poly.debug();
     }
     return 0;

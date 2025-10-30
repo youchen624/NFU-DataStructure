@@ -13,6 +13,8 @@
 // exponent
 const wchar_t EXP_N[] = L"⁰¹²³⁴⁵⁶⁷⁸⁹";
 
+int _meas_ = 0;
+
 using namespace std;
 
 // swap
@@ -290,6 +292,7 @@ private:
     };
     void _heapify_down(size_t index = 0)
     {
+        ++_meas_; // #DEBUG
         size_t left = i_left(index);
         size_t right = i_right(index);
         size_t smallest = index; // pre
@@ -345,6 +348,7 @@ public:
         this->is_sorted = that.is_sorted;
         for (int i = 0; i < that.terms; ++i)
         {
+            ++_meas_;   // #DEBUG
             this->termArray[i] = that.termArray[i];
         }
     };
@@ -408,6 +412,7 @@ public:
                 ++that_ti;
             }
             temp_poly.terms = ++main_ti;
+            ++_meas_;   // #DEBUG
         }
         if (temp_capacity == main_ti)
             return temp_poly;
@@ -445,6 +450,7 @@ public:
         for (size_t i = 0; i < sml_terms; ++i)
         {
             terray[i] = poly_cheaper->termArray[i] * poly_greater->termArray[0];
+            ++_meas_; // #DEBUG
         }
         heap.buildHeap(terray, sml_terms);
         delete[] terray;
@@ -472,11 +478,12 @@ public:
                         ++g_i;
                 };
                 // if (!(g_i < poly_greater->terms))
-                // cout << "\nc_i: " << c_i << "\ng_i: " << g_i << endl;
+                cout << "\nc_i: " << c_i << "\ng_i: " << g_i << endl;
                 temp = ((g_i < poly_greater->terms) || (c_i < sml_terms))
                            ? heap.replace(poly_cheaper->termArray[c_i] * poly_greater->termArray[g_i])
                            : heap.extract();
                 // cout << "\nc_i: " << c_i << endl;
+                ++_meas_;   // #DEBUG
             } while (t_term.exp == temp.exp);
             if (!t_term.iszero())
                 poly_temp.term_append(t_term);
@@ -497,7 +504,6 @@ public:
         float temp = 0;
         for (int i = 0; i < terms; ++i)
         {
-            // if (float_equal(termArray[i].coef, 0.0)) continue;
             temp += termArray[i].coef * pow(f, termArray[i].exp);
         }
         return temp;
@@ -587,6 +593,7 @@ public:
         this->is_sorted = that.is_sorted;
         for (int i = 0; i < terms; ++i)
         {
+            ++_meas_;   // #DEBUG
             this->termArray[i] = that.termArray[i];
         }
         return *this;
@@ -660,6 +667,7 @@ private:
                 if (i >= j)
                     break;
 
+                ++_meas_;   // #DEBUG
                 swap(termArray[i], termArray[j]);
             }
             self(self, left, j);
@@ -676,6 +684,7 @@ private:
             for (j = i + 1; (j < terms) && (termArray[i].exp == termArray[j].exp); ++j)
             {
                 temp[new_terms].coef += termArray[j].coef;
+                ++_meas_;   // #DEBUG
                 // ++new_terms;
             }
         }
@@ -700,6 +709,7 @@ private:
                 temp[new_terms] = termArray[i];
                 ++new_terms;
             }
+            ++_meas_;   //#DEBUG
         }
         delete[] termArray;
         termArray = temp;
@@ -966,12 +976,15 @@ int main()
         float f = 0.0;
         try
         {
+            cout << "_meas_: " << _meas_ << endl;
             cout << "Enter the first poly:\n> ";
             if (!(cin >> poly1))
                 throw -1;
+            cout << "_meas_: " << _meas_ << endl;
             cout << "Enter the second poly:\n> ";
             if (!(cin >> poly2))
                 throw -1;
+            cout << "_meas_: " << _meas_ << endl;
         }
         catch (const int error)
         {
@@ -982,17 +995,23 @@ int main()
             std::cin.ignore(INT_MAX, '\n');
             continue;
         };
+        cout << "_meas_: " << _meas_ << endl;
         poly3 = poly1.Mult(poly2);
+        cout << "_meas_: " << _meas_ << endl;
         cout << "(" << poly1 << ") + (" << poly2 << ") = \n"
              << poly1.Add(poly2) << endl;
+        cout << "_meas_: " << _meas_ << endl;
         cout << "(" << poly1 << ") x (" << poly2 << ") = \n"
              << poly3 << endl;
+        cout << "_meas_: " << _meas_ << endl;
         cout << "Enter the x:\n> ";
         cin >> f;
         cout << poly3 << "(x=" << f << ") = "<< poly3(f) << endl;
+        cout << "_meas_: " << _meas_ << endl;
             cin.clear();
             std::cin.ignore(INT_MAX, '\n');
         // poly.debug();
+        _meas_ = 0;
     }
     return 0;
 }
