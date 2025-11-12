@@ -9,7 +9,9 @@ class Polynomial
 public:
     Polynomial() {};
     Polynomial(const Polynomial &a) {};
-    ~Polynomial() {};
+    ~Polynomial() {
+        // delete _node ss (link)
+    };
 
     const Polynomial &operator=(const Polynomial a) {};
     Polynomial operator+(const Polynomial b) {};
@@ -68,7 +70,7 @@ private:
     // returns false when deletes nothing
     bool _node_delete(size_t index)
     {
-        if (index > _sizes) return false;
+        if (index >= _sizes) return false;
     };
     bool _node_replace(size_t index, Node node = {})
     {
