@@ -4,14 +4,29 @@ using namespace std;
 // Chain #BEGIN
 // w11W 251119
 
-template<class T>
-class ChainNode {};
+template <class T>
+class Chain
+{
+private:
+    // template <class T>
+    class ChainNode
+    {
+        // friend class Chain;
+    private:
+        T _data;
+        ChainNode* _link;
+    // protected:
+    public:
+    };
 
-template<class T>
-class Chain {};
+protected:
+public:
+};
 
-template<class T>
-class ChainIterator {};
+template <class T>
+class ChainIterator : public Chain
+{
+};
 
 // Chain #END
 
@@ -84,7 +99,8 @@ private:
     // returns false when deletes nothing
     bool _node_delete(size_t index)
     {
-        if (index >= _sizes) return false;
+        if (index >= _sizes)
+            return false;
     };
     bool _node_replace(size_t index, Node node = {})
     {
