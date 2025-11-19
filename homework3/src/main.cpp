@@ -1,6 +1,20 @@
 #include <iostream>
 using namespace std;
 
+// Chain #BEGIN
+// w11W 251119
+
+template<class T>
+class ChainNode {};
+
+template<class T>
+class Chain {};
+
+template<class T>
+class ChainIterator {};
+
+// Chain #END
+
 class Polynomial
 {
     friend istream &operator>>(istream &is, Polynomial &x);
