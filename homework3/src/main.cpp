@@ -14,18 +14,89 @@ private:
         // friend class Chain;
     private:
         T _data;
-        ChainNode* _link;
-    // protected:
+        ChainNode *_link;
+
+    private:
+        /*
+        ChainNode* _search(size_t index_ = 0) {
+            if (!index_) return this;
+            if (this->_link) return this->_link->_search(index_ - 1);
+            else throw "Out of range.";
+        };
+        */
+        // protected:
     public:
     };
 
 protected:
-public:
-};
+    ChainNode *_search(size_t index_ = 0)
+    {
+        if (_size <= 0)
+            throw "Chain-List is empty.";
+        if (index_ >= _size)
+            throw "Out of range.";
 
-template <class T>
-class ChainIterator : public Chain
-{
+        ChainNode *ptr = _node_head;
+        for (size_t i = 0; i < index_; ++i)
+        {
+            if (!(ptr->_link))
+                throw "Chain internal error (logic).";
+            ptr = ptr->_link;
+        }
+        return ptr;
+    };
+
+public:
+    class ChainIterator
+    {
+    public:
+        ChainIterator() {};
+        ~ChainIterator() {};
+    private:
+    };
+    using iterator = ChainIterator;
+
+    Chain() : _size(0) {};
+    ~Chain() {};
+
+    // returns whether the Chain empty (no items)
+    bool is_empty()
+    {
+        return !_size;
+    };
+    size_t size()
+    {
+        return _size;
+    };
+    // returns the index of the first value-matches index of items from head
+    size_t index_of(T value_) {};
+    // returns the index of the first value-matches index of items from tail
+    size_t index_of_reverse(T value_) {};
+
+    // return the top(first index) of item ref
+    iterator begin() {};
+    // return the end(last index) of item ref
+    iterator end() {};
+
+    // append an item at the tail
+    size_t push_back(T item_) {};
+
+    // return the top(first index) of item, and then remove that
+    T pop_front(size_t index_) {};
+    // return the end(last index) of item, and then remove that
+    T pop_back(size_t index_) {};
+
+    // insert, then returns whether item that be inserted is the last item
+    bool insert(size_t index_, T item_) {};
+    // delete, then returns whether deleted anything
+    bool remove(size_t index_) {};
+
+    // delete all items, then returns whether deleted anything
+    bool clear() {};
+
+private:
+    size_t _size;
+    ChainNode *_node_head;
 };
 
 // Chain #END
