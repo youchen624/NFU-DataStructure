@@ -26,6 +26,7 @@ private:
         */
         // protected:
     public:
+        ChainNode(const T& data_ = {}, const ChainNode* link_ = nullptr) : _link(link_), _data(data_) {};
     };
 
 protected:
