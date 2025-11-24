@@ -50,7 +50,7 @@ public:
     class ChainIterator
     {
     public:
-        ChainIterator() {};
+        ChainIterator(ChainNode* ptr) {};
         ~ChainIterator() {};
     private:
     };
@@ -60,18 +60,19 @@ public:
     ~Chain() {};
 
     // returns whether the Chain empty (no items)
-    bool is_empty()
+    bool is_empty() const
     {
         return !_size;
     };
-    size_t size()
+    size_t size() const
     {
         return _size;
     };
-    // returns the index of the first value-matches index of items from head
-    size_t index_of(T value_) {};
-    // returns the index of the first value-matches index of items from tail
-    size_t index_of_reverse(T value_) {};
+
+    // returns the index of the first value-matches index of items from head; returns the number of size when not found
+    size_t index_of(const T& value_) const {};
+    // returns the index of the first value-matches index of items from tail; returns the number of size when not found
+    size_t index_of_reverse(const T& value_) {};
 
     // return the top(first index) of item ref
     iterator begin() {};
@@ -79,7 +80,7 @@ public:
     iterator end() {};
 
     // append an item at the tail
-    size_t push_back(T item_) {};
+    size_t push_back(const T& item_) {};
 
     // return the top(first index) of item, and then remove that
     T pop_front(size_t index_) {};
@@ -87,7 +88,7 @@ public:
     T pop_back(size_t index_) {};
 
     // insert, then returns whether item that be inserted is the last item
-    bool insert(size_t index_, T item_) {};
+    bool insert(size_t index_, const T& item_) {};
     // delete, then returns whether deleted anything
     bool remove(size_t index_) {};
 
