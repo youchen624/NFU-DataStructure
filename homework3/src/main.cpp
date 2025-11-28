@@ -110,10 +110,33 @@ public:
 
     // returns the index of the first value-matches index of item from head; returns the number of size when not found
     size_t index_of(const T& value_) const {
-        for (size_t i = 0; i < _size; ++i) {}
+        if (!_size) return false;
+        ChainNode* p = this->_node_head;
+        for (size_t i = 0; i < _size; ++i) {
+            if (p->_data == value_) return true;
+            else if (p->_link) p  p->_link;
+        }
+        return false;
     };
     // returns the index of the first value-matches index of item from tail; returns the number of size when not found
-    size_t index_of_opposite(const T& value_) {};
+    size_t index_of_opposite(const T& value_) {
+        if (!_size) return false;
+        ChainNode* p = this->_node_head;
+        ChainNode** array = new ChainNode*[this->_size];    // these can be replaced by 2-way chain if it exists
+        for (size_t i = 0; i < _size; ++i) {
+            array[i] = p;
+            if (p->_link) p = p->_link;
+        }
+        for (size_t i = _size - 1; i >= 0; --i) {
+            if (array[i]->_data == value_) {
+                delete[] array;
+                return true;
+            };
+            // else if (array->_link) array  p->_link;
+        }
+        delete[] array;
+        return false;
+    };
 
     // return the top(first index) of iterator
     iterator begin() {};
@@ -147,7 +170,7 @@ public:
     
 private:
     size_t _size;
-    ChainNode *_node_head;
+    ChainNode* _node_head;
 };
 
 // Chain #END
