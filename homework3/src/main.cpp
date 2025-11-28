@@ -27,6 +27,7 @@ private:
         // protected:
     public:
         ChainNode(const T& data_ = {}, const ChainNode* link_ = nullptr) : _link(link_), _data(data_) {};
+        ~ChainNode() {};
     };
 
 protected:
@@ -51,44 +52,68 @@ public:
     class ChainIterator
     {
     public:
-        ChainIterator(ChainNode* ptr) {};
+        ChainIterator(ChainNode* ptr_) : _ptr(ptr_) {};
         ~ChainIterator() {};
-    private:
+
+        // get the raw value ref like a normal pointer
+        T& operator*() const {};
+
+        ChainIterator& operator++() {};
+        // ChainIterator& operator--() const {};
+        ChainIterator& operator++(int) {};
+
+        bool operator==(const ChainIterator& that) const {};
+        bool operator!=(const ChainIterator& that) const {};
+
+        private:
+        ChainNode* _ptr;
     };
     using iterator = ChainIterator;
 
     Chain() : _size(0) {};
-    ~Chain() {};
+    ~Chain() {
+        ChainNode* t = _node_head->link;
+        for (size_t i = 0; i < _size; ++i) {
+            delete _node_head;
+            _node_head = t;
+            if (t) t = t->link;
+        }
+    };
 
     // returns whether the Chain empty (no items)
     bool is_empty() const
     {
         return !_size;
     };
+    // returns current size of the Chain
     size_t size() const
     {
         return _size;
     };
 
-    // returns the index of the first value-matches index of items from head; returns the number of size when not found
-    size_t index_of(const T& value_) const {};
-    // returns the index of the first value-matches index of items from tail; returns the number of size when not found
-    size_t index_of_reverse(const T& value_) {};
+    // returns the index of the first value-matches index of item from head; returns the number of size when not found
+    size_t index_of(const T& value_) const {
+        for (size_t i = 0; i < _size; ++i) {}
+    };
+    // returns the index of the first value-matches index of item from tail; returns the number of size when not found
+    size_t index_of_opposite(const T& value_) {};
 
-    // return the top(first index) of item ref
+    // return the top(first index) of iterator
     iterator begin() {};
-    // return the end(last index) of item ref
+    // return the end(last index) of iterator
     iterator end() {};
 
     // append an item at the tail
     size_t push_back(const T& item_) {};
+    // append an item at the font
+    size_t push_font(const T& item_) {};
 
     // return the top(first index) of item, and then remove that
     T pop_front(size_t index_) {};
     // return the end(last index) of item, and then remove that
     T pop_back(size_t index_) {};
 
-    // insert, then returns whether item that be inserted is the last item
+    // insert, insert an item into the target index, and cause 1 offset for all behind's, then returns whether item that be inserted is the last item
     bool insert(size_t index_, const T& item_) {};
     // delete, then returns whether deleted anything
     bool remove(size_t index_) {};
@@ -96,6 +121,13 @@ public:
     // delete all items, then returns whether deleted anything
     bool clear() {};
 
+    /* // mystery func (s)
+    // undo for one step, this is an once function, should do any operation before calling, or always fail; returns whether undo successful
+    bool undo() {};
+    // random all items position
+    void random() {};
+    */
+    
 private:
     size_t _size;
     ChainNode *_node_head;
