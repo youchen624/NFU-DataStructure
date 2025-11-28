@@ -56,14 +56,31 @@ public:
         ~ChainIterator() {};
 
         // get the raw value ref like a normal pointer
-        T& operator*() const {};
+        T& operator*() const {
+            return this->_ptr->_data;
+        };
+        // using as a pointer
+        T* operator->() const {
+            return &(this->_ptr->_data);
+        };
 
-        ChainIterator& operator++() {};
+        ChainIterator& operator++() {
+            this->_ptr = this->_ptr->link;
+            return *this;
+        };
         // ChainIterator& operator--() const {};
-        ChainIterator& operator++(int) {};
+        ChainIterator& operator++(int) {
+            ChainIterator t = *this;
+            this->_ptr = this->_ptr->_link;
+            return t;
+        };
 
-        bool operator==(const ChainIterator& that) const {};
-        bool operator!=(const ChainIterator& that) const {};
+        bool operator==(const ChainIterator& that) const {
+            return (this->_ptr == that._ptr);
+        };
+        bool operator!=(const ChainIterator& that) const {
+            return (this->_ptr != that._ptr);
+        };
 
         private:
         ChainNode* _ptr;
