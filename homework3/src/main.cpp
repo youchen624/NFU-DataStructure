@@ -169,9 +169,24 @@ public:
     };
 
     // return the top(first index) of item, and then remove that
-    T pop_front(size_t index_) {};
+    T pop_front(size_t index_) {
+        if (this->empty()) throw "Chain is empty.";
+        T t = _node_head->_data;
+        ChainNode* t_ptr = _node_head;
+        delete _node_head;
+        _node_head = t_ptr;
+        --_size;
+        return t;
+    };
     // return the end(last index) of item, and then remove that
-    T pop_back(size_t index_) {};
+    T pop_back(size_t index_) {
+        if (_size <= 1) return pop_front(index_);
+        T t = _node_last->_data;
+        delete _node_last;
+        _node_last = _search(_size - 2);
+        --_size;
+        return;
+    };
 
     // insert, insert an item into the target index, and cause 1 offset for all behind's, then returns whether item that be inserted is the last item
     bool insert(size_t index_, const T& item_) {};
