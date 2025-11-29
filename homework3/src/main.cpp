@@ -37,6 +37,8 @@ protected:
             throw "Chain-List is empty.";
         if (index_ >= _size)
             throw "Out of range.";
+        if (index == _size - 1)
+            return this->_node_last;
 
         ChainNode *ptr = _node_head;
         for (size_t i = 0; i < index_; ++i)
@@ -148,9 +150,24 @@ public:
     };
 
     // append an item at the tail
-    size_t push_back(const T& item_) {};
+    size_t push_back(const T& item_) {
+        if (this->empty()) {
+            _node_head = _node_last = new ChainNode(item_);
+            ++_size;
+        } else {
+            _node_last->_link = new ChainNode(item_);
+            _node_last = _node_last->_link;
+            ++_size;
+        }
+    };
     // append an item at the font
-    size_t push_font(const T& item_) {};
+    size_t push_font(const T& item_) {
+        if (this->empty()) this->push_back(item_);
+        else {
+            _node_head = new ChainNode(item_, _node_head);
+            ++_size;
+        }
+    };
 
     // return the top(first index) of item, and then remove that
     T pop_front(size_t index_) {};
@@ -175,6 +192,7 @@ public:
 private:
     size_t _size;
     ChainNode* _node_head;
+    ChainNode* _node_last;
 };
 
 // Chain #END
