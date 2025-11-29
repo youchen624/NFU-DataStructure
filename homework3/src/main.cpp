@@ -153,20 +153,19 @@ public:
     size_t push_back(const T& item_) {
         if (this->empty()) {
             _node_head = _node_last = new ChainNode(item_);
-            ++_size;
         } else {
             _node_last->_link = new ChainNode(item_);
             _node_last = _node_last->_link;
-            ++_size;
         }
+        return ++_size;
     };
     // append an item at the font
     size_t push_font(const T& item_) {
-        if (this->empty()) this->push_back(item_);
+        if (this->empty()) return this->push_back(item_);
         else {
             _node_head = new ChainNode(item_, _node_head);
-            ++_size;
         }
+        return ++_size;
     };
 
     // return the top(first index) of item, and then remove that
