@@ -11,7 +11,8 @@ private:
     // template <class T>
     class ChainNode
     {
-        // friend class Chain;
+        friend class Chain;
+        friend class ChainIterator;
     private:
         T _data;
         ChainNode *_link;
@@ -26,7 +27,7 @@ private:
         */
         // protected:
     public:
-        ChainNode(const T& data_ = {}, const ChainNode* link_ = nullptr) : _link(link_), _data(data_) {};
+        ChainNode(const T& data_ = {}, ChainNode* link_ = nullptr) : _link(link_), _data(data_) {};
         ~ChainNode() {};
     };
 
@@ -37,7 +38,7 @@ protected:
             throw "Chain-List is empty.";
         if (index_ >= _size)
             throw "Out of range.";
-        if (index == _size - 1)
+        if (index_ == _size - 1)
             return this->_node_last;
 
         ChainNode *ptr = _node_head;
@@ -91,16 +92,16 @@ public:
 
     Chain() : _size(0) {};
     ~Chain() {
-        ChainNode* t = _node_head->link;
+        ChainNode* t = _node_head;
         for (size_t i = 0; i < _size; ++i) {
+            t = t->_link;
             delete _node_head;
             _node_head = t;
-            if (t) t = t->link;
         }
     };
 
     // returns whether the Chain empty (no items)
-    bool is_empty() const
+    bool empty() const
     {
         return !_size;
     };
@@ -116,7 +117,7 @@ public:
         ChainNode* p = this->_node_head;
         for (size_t i = 0; i < _size; ++i) {
             if (p->_data == value_) return true;
-            else if (p->_link) p  p->_link;
+            else if (p->_link) p =  p->_link;
         }
         return false;
     };
@@ -194,7 +195,21 @@ public:
     bool remove(size_t index_) {};
 
     // delete all items, then returns whether deleted anything
-    bool clear() {};
+    bool clear() {
+        if (this->empty()) return false;
+        ChainNode* ptr = _node_head;
+        for (size_t i = 0; i < _size; ++i) {
+            ptr = ptr->_link;
+            delete _node_head;
+            _node_head = ptr;
+        }
+        _node_head = _node_last = nullptr;
+        return true;
+    };
+
+    T& operator[](size_t index_) {
+        return this->_search(index_)->_data;
+    };
 
     /* // mystery func (s)
     // undo for one step, this is an once function, should do any operation before calling, or always fail; returns whether undo successful
@@ -211,6 +226,7 @@ private:
 
 // Chain #END
 
+/*
 class Polynomial
 {
     friend istream &operator>>(istream &is, Polynomial &x);
@@ -326,8 +342,17 @@ private:
 
 istream &operator>>(istream &is, Polynomial &x) {};
 istream &operator>>(istream &is, Polynomial &x) {};
+*/
 
 int main()
 {
+    Chain<int> c;
+    for (int i = 0; i < 20; ++i) {
+        c.push_back(i);
+    }
+    cout << "c.size=" << c.size() << endl;
+    for (size_t i = 0; i < c.size(); ++i) {
+        cout << c[i] << " ";
+    } cout << endl;
     return 0;
 }
