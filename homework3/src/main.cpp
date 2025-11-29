@@ -139,9 +139,13 @@ public:
     };
 
     // return the top(first index) of iterator
-    iterator begin() {};
+    iterator begin() {
+        return iterator(this->_search(0));
+    };
     // return the end(last index) of iterator
-    iterator end() {};
+    iterator end() {
+        return iterator(this->_search(this->_size - 1));
+    };
 
     // append an item at the tail
     size_t push_back(const T& item_) {};
