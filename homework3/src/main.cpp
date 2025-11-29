@@ -55,7 +55,7 @@ public:
     class ChainIterator
     {
     public:
-        ChainIterator(ChainNode* ptr_) : _ptr(ptr_) {};
+        ChainIterator(ChainNode* ptr_ = nullptr) : _ptr(ptr_) {};
         ~ChainIterator() {};
 
         // get the raw value ref like a normal pointer
@@ -68,7 +68,7 @@ public:
         };
 
         ChainIterator& operator++() {
-            this->_ptr = this->_ptr->link;
+            this->_ptr = this->_ptr->_link;
             return *this;
         };
         // ChainIterator& operator--() const {};
@@ -78,11 +78,11 @@ public:
             return t;
         };
 
-        bool operator==(const ChainIterator& that) const {
-            return (this->_ptr == that._ptr);
-        };
         bool operator!=(const ChainIterator& that) const {
             return (this->_ptr != that._ptr);
+        };
+        bool operator==(const ChainIterator& that) const {
+            return !operator!=(that);
         };
 
         private:
@@ -113,41 +113,43 @@ public:
 
     // returns the index of the first value-matches index of item from head; returns the number of size when not found
     size_t index_of(const T& value_) const {
-        if (!_size) return false;
+        if (!_size) return _size;
         ChainNode* p = this->_node_head;
         for (size_t i = 0; i < _size; ++i) {
-            if (p->_data == value_) return true;
+            if (p->_data == value_) return i;
             else if (p->_link) p =  p->_link;
         }
-        return false;
+        return _size;
     };
     // returns the index of the first value-matches index of item from tail; returns the number of size when not found
     size_t index_of_opposite(const T& value_) {
-        if (!_size) return false;
+        if (!_size) return _size;
         ChainNode* p = this->_node_head;
         ChainNode** array = new ChainNode*[this->_size];    // these can be replaced by 2-way chain if it exists
         for (size_t i = 0; i < _size; ++i) {
             array[i] = p;
             if (p->_link) p = p->_link;
         }
-        for (size_t i = _size - 1; i >= 0; --i) {
-            if (array[i]->_data == value_) {
+        for (size_t i = 0; i < _size; ++i) {
+            if (array[_size - i - 1]->_data == value_) {
                 delete[] array;
-                return true;
+                return _size - i - 1;
             };
             // else if (array->_link) array  p->_link;
         }
         delete[] array;
-        return false;
+        return _size;
     };
 
     // return the top(first index) of iterator
     iterator begin() {
+        if (empty()) return iterator(nullptr);
         return iterator(this->_search(0));
     };
-    // return the end(last index) of iterator
+    // return nullptr of iterator //~~// return the end(last index) of iterator~~
     iterator end() {
-        return iterator(this->_search(this->_size - 1));
+        return iterator(nullptr);
+        // return iterator(this->_search(this->_size - 1));
     };
 
     // append an item at the tail
@@ -160,8 +162,8 @@ public:
         }
         return ++_size;
     };
-    // append an item at the font
-    size_t push_font(const T& item_) {
+    // append an item at the front
+    size_t push_front(const T& item_) {
         if (this->empty()) return this->push_back(item_);
         else {
             _node_head = new ChainNode(item_, _node_head);
@@ -170,29 +172,56 @@ public:
     };
 
     // return the top(first index) of item, and then remove that
-    T pop_front(size_t index_) {
+    T pop_front() {
         if (this->empty()) throw "Chain is empty.";
         T t = _node_head->_data;
-        ChainNode* t_ptr = _node_head;
+        ChainNode* t_ptr = _node_head->_link;
         delete _node_head;
         _node_head = t_ptr;
         --_size;
         return t;
     };
     // return the end(last index) of item, and then remove that
-    T pop_back(size_t index_) {
-        if (_size <= 1) return pop_front(index_);
+    T pop_back() {
+        if (_size <= 1) return pop_front();
         T t = _node_last->_data;
         delete _node_last;
         _node_last = _search(_size - 2);
+        _node_last->_link = nullptr;
         --_size;
-        return;
+        return t;
     };
 
     // insert, insert an item into the target index, and cause 1 offset for all behind's, then returns whether item that be inserted is the last item
-    bool insert(size_t index_, const T& item_) {};
+    bool insert(size_t index_, const T& item_) {
+        if (index_ > _size) throw "Out of range";
+        ChainNode* ptr;
+        if (!index_) {
+            ptr = _node_head = new ChainNode(item_, _node_head);
+        } else {
+            ChainNode* pptr = _search(index_ - 1);
+            ptr = pptr->_link = new ChainNode(item_, pptr->_link);
+        }
+        ++_size;
+        return (ptr == _node_last);
+    };
+
     // delete, then returns whether deleted anything
-    bool remove(size_t index_) {};
+    bool remove(size_t index_) {
+        if (index_ > _size) return false; // delete nothing ~~//throw "Out of range";~~
+        ChainNode* del = nullptr;
+        if (!index_) {
+            del = _node_head;
+            _node_head = _node_head->_link;
+        } else {
+            ChainNode* pptr = _search(index_ - 1);
+            del = pptr->_link;
+            pptr->_link = pptr->_link->_link;   // bypassing
+        }
+        --_size;
+        delete del;
+        return true;
+    };
 
     // delete all items, then returns whether deleted anything
     bool clear() {
@@ -204,6 +233,7 @@ public:
             _node_head = ptr;
         }
         _node_head = _node_last = nullptr;
+        _size = 0;
         return true;
     };
 
@@ -217,6 +247,16 @@ public:
     // random all items position
     void random() {};
     */
+
+    void debug() {
+        cout
+            << "debug--->" << endl
+            << "size=" << size() << endl
+            << "head=" << _node_head << endl
+            << "last=" << _node_last << endl
+            << "<---debug"
+        << endl;
+    };
     
 private:
     size_t _size;
@@ -351,8 +391,86 @@ int main()
         c.push_back(i);
     }
     cout << "c.size=" << c.size() << endl;
+    /*
     for (size_t i = 0; i < c.size(); ++i) {
         cout << c[i] << " ";
     } cout << endl;
+    */
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+    cout << "c.index_of(5)=" << c.index_of(5) << endl;
+    cout << "c.index_of_opposite(6)=" << c.index_of_opposite(6) << endl;
+
+    cout << "c[7]=9=" << c[7] << endl;
+    c[7] = 9;
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+
+    cout << "c.insert(8, 999)=>" << endl;
+    c.insert(8, 999);
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+
+    cout << "c.remove(8)=>" << endl;
+    c.remove(8);
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+
+    // c.debug();
+
+    cout << "c.clear()=>" << endl;
+    c.clear();
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+
+    // c.debug();
+    cout << "c.push_front([20~1])=>" << endl;
+    for (int i = 20; i > 0; --i) {
+        c.push_front(i);
+    }
+    // c.debug();
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+
+    int back = c.pop_back();
+    cout << "c.pop_back()=" << back << endl << "c= ";
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+
+    int front = c.pop_front();
+    cout << "c.pop_front()=" << front << endl << "c= ";
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+
+    cout << "c.clear()" << endl;
+    c.clear();
+    for(int i = 0; i < 10; ++i) {
+        c.push_back(2);
+    }
+    cout << "c.push_back([2 * 10])=>" << endl;
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+    cout << "c.index_of(2)=" << c.index_of(2) << endl;
+    cout << "c.index_of_opposite(2)=" << c.index_of_opposite(2) << endl;
+    cout << "c.index_of(200)=" << c.index_of(200) << endl;
+    cout << "c.index_of_opposite(200)=" << c.index_of_opposite(200) << endl;
     return 0;
 }
