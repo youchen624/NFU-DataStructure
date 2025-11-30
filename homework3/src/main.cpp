@@ -111,7 +111,7 @@ public:
         return _size;
     };
 
-    // returns the index of the first value-matches index of item from head; returns the number of size when not found
+    // returns the index of the first value-matches index of item from the head; returns the number of size when not found
     size_t index_of(const T& value_) const {
         if (!_size) return _size;
         ChainNode* p = this->_node_head;
@@ -121,7 +121,7 @@ public:
         }
         return _size;
     };
-    // returns the index of the first value-matches index of item from tail; returns the number of size when not found
+    // returns the index of the first value-matches index of item from the tail; returns the number of size when not found
     size_t index_of_opposite(const T& value_) {
         if (!_size) return _size;
         ChainNode* p = this->_node_head;
@@ -265,6 +265,100 @@ private:
 };
 
 // Chain #END
+
+
+
+// CircularList #BEGIN
+// w12Sa 251129
+
+template <class T>
+class CircularList {
+protected:
+    class Node {
+    private:
+        T data;
+        Node* next;
+        Node* prev;
+    public:
+        Node(const T& data_ = {}, Node* next_ = nullptr, Node* prev_ = nullptr) : data(data_), next(next_), prev(prev_) {};
+        ~Node() {};
+    };
+
+    Node* _search(size_t index_ = 0) {
+        ;
+    };
+public:
+    class CircularListIterator {
+    public:
+        CircularListIterator(Node* ptr_) : ptr(ptr_) {};
+        ~CircularListIterator() {};
+    private:
+        Node* ptr;
+    };
+    using iterator = CircularListIterator;
+public:
+    CircularList() : _size(0) {};
+    ~CircularList() {};
+
+    // returns whether the List empty
+    bool empty() const {
+        return !_size;
+    };
+    // returns current size of the List
+    size_t size() const {
+        return this->_size;
+    };
+
+    // returns the index of the first value-matches index of item from the head; returns the number of size when not found
+    size_t index_of(const T& value_) const {};
+    // returns the index of the first value-matches index of item from the tail; returns the number of size when not found
+    size_t index_of_opposite(const T& value_) const {};
+
+    iterator begin() {};
+    iterator end() {};
+
+    // append an item at the tail
+    size_t push_back(const T& item_) {};
+    // append an item at the front
+    size_t push_front(const T& item_) {};
+
+    // return the head item, and then remove that from the List
+    T pop_front() {};
+    // return the tail item, and then remove that from the List
+    T pop_back() {};
+
+    // insert, insert an item into the target index, and cause 1 offset for all behind's, then returns whether item that be inserted is the last item of the List
+    bool insert(size_t index_, const T& item_) {};
+
+    // delete, delete an item, and cause -1 offset for all behind's, then returns whether deleted anything
+    bool remove(size_t index_) {};
+
+    // delete all items from List
+    void clear() {};
+
+    // works as normal Array
+    T& operator[](size_t index_) {};
+
+    /*
+    // Mystery func (s)
+    // makes the circular list change the rotation direction
+    void inverse() {};
+    // extracts all items of odd index from the List, and they will not keep in the origin List; count from "index_"; work like "star_even()" when index_ +- 1
+    CircularList star_odd(size_t index_) {};
+    //
+    CircularList connect(CircularList& that) {};
+    */
+
+    void debug() {};
+private:
+    size_t _size;
+    Node* _node_head;
+    // Node* _node_last;
+};
+
+// CircularList #END
+
+
 
 /*
 class Polynomial
