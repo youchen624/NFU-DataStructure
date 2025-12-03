@@ -32,7 +32,7 @@ private:
     };
 
 protected:
-    ChainNode *_search(size_t index_ = 0)
+    ChainNode* _search(size_t index_ = 0)
     {
         if (_size <= 0)
             throw "Chain-List is empty.";
@@ -285,7 +285,27 @@ protected:
     };
 
     Node* _search(size_t index_ = 0) {
-        ;
+        if (!_size) throw "List is empty.";
+        if (index_ >= _size) throw "Out of range.";
+
+        Node* ptr = _node_head;
+        if (index_ > _size % 2) {
+            // rev
+            for (size_t i = _size - 1;true; --i) {
+                if (index_ == i)
+                    return ptr->prev;
+                else
+                    ptr = ptr->prev;
+            }
+        } else {
+            // pos
+            for (size_t i = 0;true; ++i) {
+                if (index_ == i)
+                    return ptr;
+                else
+                    ptr = ptr->next;
+            }
+        }
     };
 public:
     class CircularListIterator {
@@ -310,17 +330,61 @@ public:
     };
 
     // returns the index of the first value-matches index of item from the head; returns the number of size when not found
-    size_t index_of(const T& value_) const {};
+    size_t index_of(const T& value_) const {
+        Node* ptr = _node_head;
+        for (size_t i = 0; i < _size; ++i) {
+            if (ptr->data == value_) return i;
+            else ptr = ptr->next;
+        }
+        return this->_size;
+    };
     // returns the index of the first value-matches index of item from the tail; returns the number of size when not found
-    size_t index_of_opposite(const T& value_) const {};
+    size_t index_of_opposite(const T& value_) const {
+        Node* ptr = _node_head->prev;
+        for (size_t i = 0; i < _size; ++i) {
+            if (ptr->data == value_) return _size - i - 1;
+            else ptr = ptr->prev;
+        }
+        return this->_size;
+    };
 
     iterator begin() {};
     iterator end() {};
 
     // append an item at the tail
-    size_t push_back(const T& item_) {};
+    size_t push_back(const T& item_) {
+        if (empty()) {
+            _node_head = new Node(item_);
+            _node_head->prev
+                = _node_head->next
+                = _node_head;
+        } else {
+            // !! WARN !! below#3 , ordering problem if you change !! WARN !!
+            // #BEGIN
+            _node_head->prev
+                = _node_head->prev->next
+                = new Node(item_, _node_head, _node_head->prev);
+            // #END
+            // !! WARN !! ^^^#3 , ordering problem if you change !! WARN !!
+        }
+        return ++_size;
+    };
     // append an item at the front
-    size_t push_front(const T& item_) {};
+    size_t push_front(const T& item_) {
+        if (empty()) {
+            return this->push_back(item_);
+        } else {
+            // !! WARN !! below#4 , ordering problem if you change !! WARN !!
+            // #BEGIN
+            _node_head
+                = _node_head->prev
+                = _node_head->prev->next
+                = new Node(item_, _node_head, _node_head->prev);
+            // #END
+            // !! WARN !! ^^^#4 , ordering problem if you change !! WARN !!
+        }
+        return ++_size;
+    };
 
     // return the head item, and then remove that from the List
     T pop_front() {};
