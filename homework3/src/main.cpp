@@ -387,9 +387,40 @@ public:
     };
 
     // return the head item, and then remove that from the List
-    T pop_front() {};
+    T pop_front() {
+        if (empty()) throw "List is empty.";
+        T t = _node_head->data;
+        if (_size == 1) {
+            delete _node_head;
+            _node_head = nullptr;
+            --_size;
+            return t;
+        }
+        Node* ptr = _node_head->next;
+        _node_head->next->prev = _node_head->prev;
+        _node_head->prev->next = _node_head->next;
+        delete _node_head;
+        _node_head = ptr;
+        --_size;
+        return t;
+    };
     // return the tail item, and then remove that from the List
-    T pop_back() {};
+    T pop_back() {
+        if (empty()) throw "List is empty.";
+        T t = _node_head->prev->data;
+        if (_size == 1) {
+            delete _node_head;
+            _node_head = nullptr;
+            --_size;
+            return t;
+        }
+        Node* dptr = _node_head->prev;
+        dptr->prev->next = _node_head;
+        _node_head->prev = dptr->prev;
+        delete dptr;
+        --_size;
+        return t;
+    };
 
     // insert, insert an item into the target index, and cause 1 offset for all behind's, then returns whether item that be inserted is the last item of the List
     bool insert(size_t index_, const T& item_) {};
@@ -401,7 +432,9 @@ public:
     void clear() {};
 
     // works as normal Array
-    T& operator[](size_t index_) {};
+    T& operator[](size_t index_) {
+        return this->_search(index_)->data;
+    };
 
     /*
     // Mystery func (s)
