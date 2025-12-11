@@ -316,6 +316,7 @@ public:
         CircularListIterator(Node* parent_head_, Node* ptr_) : parent_head(parent_head_), ptr(ptr_) {};
         ~CircularListIterator() {};
 <<<<<<< HEAD
+<<<<<<< HEAD
 
         T& operator*() const {
             return this->ptr->data;
@@ -353,6 +354,8 @@ public:
         bool operator==(const CircularListIterator& that) const {
             return !operator!=(that);
         };
+=======
+>>>>>>> parent of f3ebdc7 (w13Fa2)
 =======
 >>>>>>> parent of f3ebdc7 (w13Fa2)
     private:
@@ -399,6 +402,7 @@ public:
     };
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     /*
     iterator begin() {
         return iterator(_node_head, (this->empty() ? nullptr : _node_head->next));
@@ -414,6 +418,8 @@ public:
     */
     
 =======
+=======
+>>>>>>> parent of f3ebdc7 (w13Fa2)
     iterator begin() {};
     iterator end() {};
 
@@ -501,6 +507,27 @@ public:
             --_size;
             return t;
         }
+<<<<<<< HEAD
+=======
+        Node* ptr = _node_head->next;
+        _node_head->next->prev = _node_head->prev;
+        _node_head->prev->next = _node_head->next;
+        delete _node_head;
+        _node_head = ptr;
+        --_size;
+        return t;
+    };
+    // return the tail item, and then remove that from the List
+    T pop_back() {
+        if (empty()) throw "List is empty.";
+        T t = _node_head->prev->data;
+        if (_size == 1) {
+            delete _node_head;
+            _node_head = nullptr;
+            --_size;
+            return t;
+        }
+>>>>>>> parent of f3ebdc7 (w13Fa2)
         Node* dptr = _node_head->prev;
         dptr->prev->next = _node_head;
         _node_head->prev = dptr->prev;
