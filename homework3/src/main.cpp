@@ -85,7 +85,7 @@ public:
             return !operator!=(that);
         };
 
-        private:
+    private:
         ChainNode* _ptr;
     };
     using iterator = ChainIterator;
@@ -275,6 +275,7 @@ template <class T>
 class CircularList {
 protected:
     class Node {
+    friend class CircularList;
     private:
         T data;
         Node* next;
@@ -307,13 +308,12 @@ protected:
             }
         }
     };
+    /*
 public:
     class CircularListIterator {
     public:
         CircularListIterator(Node* ptr_) : ptr(ptr_) {};
         ~CircularListIterator() {};
-<<<<<<< HEAD
-<<<<<<< HEAD
 
         T& operator*() const {
             return this->ptr->data;
@@ -347,14 +347,11 @@ public:
         bool operator==(const CircularListIterator& that) const {
             return !operator!=(that);
         };
-=======
->>>>>>> parent of f3ebdc7 (w13Fa2)
-=======
->>>>>>> parent of f3ebdc7 (w13Fa2)
     private:
         Node* ptr;
     };
     using iterator = CircularListIterator;
+    */
 public:
     CircularList() : _size(0) {};
     ~CircularList() {};
@@ -387,31 +384,15 @@ public:
         return this->_size;
     };
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
     /*
-=======
->>>>>>> parent of 0df049c (w14Tha1)
     iterator begin() {
         return iterator(_node_head);
     };
     iterator end() {
         return iterator(nullptr);
     };
-<<<<<<< HEAD
     */
-    
-=======
-=======
->>>>>>> parent of f3ebdc7 (w13Fa2)
-    iterator begin() {};
-    iterator end() {};
 
->>>>>>> parent of f3ebdc7 (w13Fa2)
-=======
-
->>>>>>> parent of 0df049c (w14Tha1)
     // append an item at the tail
     size_t push_back(const T& item_) {
         if (empty()) {
@@ -469,33 +450,7 @@ public:
     T pop_back() {
         if (empty()) throw "List is empty.";
         T t = _node_head->prev->data;
-        if (_size == 1) {
-            delete _node_head;
-            _node_head = nullptr;
-            --_size;
-            return t;
-        }
-<<<<<<< HEAD
-=======
-        Node* ptr = _node_head->next;
-        _node_head->next->prev = _node_head->prev;
-        _node_head->prev->next = _node_head->next;
-        delete _node_head;
-        _node_head = ptr;
-        --_size;
-        return t;
-    };
-    // return the tail item, and then remove that from the List
-    T pop_back() {
-        if (empty()) throw "List is empty.";
-        T t = _node_head->prev->data;
-        if (_size == 1) {
-            delete _node_head;
-            _node_head = nullptr;
-            --_size;
-            return t;
-        }
->>>>>>> parent of f3ebdc7 (w13Fa2)
+        if (_size == 1) return pop_front();
         Node* dptr = _node_head->prev;
         dptr->prev->next = _node_head;
         _node_head->prev = dptr->prev;
@@ -505,13 +460,44 @@ public:
     };
 
     // insert, insert an item into the target index, and cause 1 offset for all behind's, then returns whether item that be inserted is the last item of the List
-    bool insert(size_t index_, const T& item_) {};
+    bool insert(size_t index_, const T& item_) {
+        if (index_ > _size) throw "Out of range";
+        else if (index_ == _size) return push_back(item_);
+        else if (!index_) return push_front(item_); // || empty()
+        Node* pptr = _search(index_ - 1);
+        pptr->next
+            = pptr->next->prev
+            = new Node(item_, pptr->next, pptr);
+        ++_size;
+        return false;
+    };
 
-    // delete, delete an item, and cause -1 offset for all behind's, then returns whether deleted anything
-    bool remove(size_t index_) {};
+    // delete, dump an item, and cause -1 offset for all behind's, then returns the item which be dumped
+    T remove(size_t index_) {
+        if (index_ > _size) throw "Out of range"; // return false;
+        else if (index_ == _size) return pop_back();
+        else if (!index_) return pop_front(); // || empty()
+        Node* dptr = _search(index_ );
+        T t = dptr->data;
+        dptr->prev->next = dptr->next;
+        dptr->next->prev = dptr->prev;
+        --_size;
+        return t;
+    };
 
     // delete all items from List
-    void clear() {};
+    void clear() {
+        for (
+            Node* dptr;
+            _size; --_size
+        ) {
+            dptr = _node_head;
+            _node_head = dptr->next;
+            delete dptr;
+            // dptr->next->prev = _node_head;
+        }
+        _node_head->prev = _node_head;
+    };
 
     // works as normal Array
     T& operator[](size_t index_) {
@@ -657,6 +643,7 @@ istream &operator>>(istream &is, Polynomial &x) {};
 istream &operator>>(istream &is, Polynomial &x) {};
 */
 
+/*
 int main()
 {
     Chain<int> c;
@@ -664,11 +651,6 @@ int main()
         c.push_back(i);
     }
     cout << "c.size=" << c.size() << endl;
-    /*
-    for (size_t i = 0; i < c.size(); ++i) {
-        cout << c[i] << " ";
-    } cout << endl;
-    */
     for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
         int v = *i;
         cout << v << " ";
@@ -739,6 +721,94 @@ int main()
     cout << "c.push_back([2 * 10])=>" << endl;
     for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
         int v = *i;
+        cout << v << " ";
+    } cout << endl;
+    cout << "c.index_of(2)=" << c.index_of(2) << endl;
+    cout << "c.index_of_opposite(2)=" << c.index_of_opposite(2) << endl;
+    cout << "c.index_of(200)=" << c.index_of(200) << endl;
+    cout << "c.index_of_opposite(200)=" << c.index_of_opposite(200) << endl;
+    return 0;
+}
+*/
+
+
+int main()
+{
+    CircularList<int> c;
+    for (int i = 0; i < 20; ++i) {
+        c.push_back(i);
+    }
+    cout << "c.size=" << c.size() << endl;
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+    cout << "c.index_of(5)=" << c.index_of(5) << endl;
+    cout << "c.index_of_opposite(6)=" << c.index_of_opposite(6) << endl;
+
+    cout << "c[7]=9=" << c[7] << endl;
+    c[7] = 9;
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+
+    cout << "c.insert(8, 999)=>" << endl;
+    c.insert(8, 999);
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+
+    cout << "c.remove(8)=>" << endl;
+    c.remove(8);
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+
+    // c.debug();
+
+    cout << "c.clear()=>" << endl;
+    c.clear();
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+
+    // c.debug();
+    cout << "c.push_front([20~1])=>" << endl;
+    for (int i = 20; i > 0; --i) {
+        c.push_front(i);
+    }
+    // c.debug();
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+
+    int back = c.pop_back();
+    cout << "c.pop_back()=" << back << endl << "c= ";
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+
+    int front = c.pop_front();
+    cout << "c.pop_front()=" << front << endl << "c= ";
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+
+    cout << "c.clear()" << endl;
+    c.clear();
+    for(int i = 0; i < 10; ++i) {
+        c.push_back(2);
+    }
+    cout << "c.push_back([2 * 10])=>" << endl;
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
         cout << v << " ";
     } cout << endl;
     cout << "c.index_of(2)=" << c.index_of(2) << endl;
