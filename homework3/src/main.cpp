@@ -275,7 +275,6 @@ template <class T>
 class CircularList {
 protected:
     class Node {
-    friend class CircularList;
     private:
         T data;
         Node* next;
@@ -289,10 +288,9 @@ protected:
         if (!_size) throw "List is empty.";
         if (index_ >= _size) throw "Out of range.";
 
-        Node* ptr = _node_head->next;
+        Node* ptr = _node_head;
         if (index_ > _size % 2) {
             // rev
-            ptr = ptr->prev;
             for (size_t i = _size - 1;true; --i) {
                 if (index_ == i)
                     return ptr->prev;
@@ -310,10 +308,9 @@ protected:
         }
     };
 public:
-    /*
     class CircularListIterator {
     public:
-        CircularListIterator(Node* parent_head_, Node* ptr_) : parent_head(parent_head_), ptr(ptr_) {};
+        CircularListIterator(Node* ptr_) : ptr(ptr_) {};
         ~CircularListIterator() {};
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -327,24 +324,20 @@ public:
 
         CircularListIterator& operator++() {
             this->ptr = this->ptr->next;
-            if (this->ptr == parent_head) ptr = ptr->next;
             return *this;
         };
         CircularListIterator& operator++(int) {
             CircularListIterator t = *this;
             this->ptr = this->ptr->next;
-            if (this->ptr == parent_head) ptr = ptr->next;
             return t;
         };
         CircularListIterator& operator--() {
             this->ptr = this->ptr->prev;
-            if (this->ptr == parent_head) ptr = ptr->prev;
             return *this;
         };
         CircularListIterator& operator--(int) {
             CircularListIterator t = *this;
             this->ptr = this->ptr->prev;
-            if (this->ptr == parent_head) ptr = ptr->prev;
             return t;
         };
 
@@ -360,18 +353,11 @@ public:
 >>>>>>> parent of f3ebdc7 (w13Fa2)
     private:
         Node* ptr;
-        Node* parent_head;
     };
     using iterator = CircularListIterator;
-    */
 public:
-    CircularList() : _size(0) {
-        _node_head = new Node();
-    };
-    ~CircularList() {
-        clear();
-        delete _node_head;
-    };
+    CircularList() : _size(0) {};
+    ~CircularList() {};
 
     // returns whether the List empty
     bool empty() const {
@@ -384,7 +370,7 @@ public:
 
     // returns the index of the first value-matches index of item from the head; returns the number of size when not found
     size_t index_of(const T& value_) const {
-        Node* ptr = _node_head->next;
+        Node* ptr = _node_head;
         for (size_t i = 0; i < _size; ++i) {
             if (ptr->data == value_) return i;
             else ptr = ptr->next;
@@ -403,18 +389,17 @@ public:
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     /*
+=======
+>>>>>>> parent of 0df049c (w14Tha1)
     iterator begin() {
-        return iterator(_node_head, (this->empty() ? nullptr : _node_head->next));
+        return iterator(_node_head);
     };
-    iterator at(size_t index_) {
-        return iterator(_node_head, this->_search(index_));
-    };
-    */
-    /* in circular, end() method should not exist.
     iterator end() {
         return iterator(nullptr);
     };
+<<<<<<< HEAD
     */
     
 =======
@@ -424,18 +409,16 @@ public:
     iterator end() {};
 
 >>>>>>> parent of f3ebdc7 (w13Fa2)
+=======
+
+>>>>>>> parent of 0df049c (w14Tha1)
     // append an item at the tail
     size_t push_back(const T& item_) {
         if (empty()) {
-            _node_head->prev
-                = _node_head->next
-                = new Node(item_, _node_head, _node_head);
-            /*
             _node_head = new Node(item_);
             _node_head->prev
-            = _node_head->next
-            = _node_head;
-            */
+                = _node_head->next
+                = _node_head;
         } else {
             // !! WARN !! below#3 , ordering problem if you change !! WARN !!
             // #BEGIN
@@ -452,19 +435,14 @@ public:
         if (empty()) {
             return this->push_back(item_);
         } else {
-            // !! WARN !! below#3 , ordering problem if you change !! WARN !!
+            // !! WARN !! below#4 , ordering problem if you change !! WARN !!
             // #BEGIN
-            _node_head->next
-                = _node_head->next->prev
-                = new Node(item_, _node_head->next, _node_head);
-            // #END
-            // !! WARN !! ^^^#3 , ordering problem if you change !! WARN !!
-            /*
             _node_head
-            = _node_head->prev
-            = _node_head->prev->next
-            = new Node(item_, _node_head, _node_head->prev);
-            */
+                = _node_head->prev
+                = _node_head->prev->next
+                = new Node(item_, _node_head, _node_head->prev);
+            // #END
+            // !! WARN !! ^^^#4 , ordering problem if you change !! WARN !!
         }
         return ++_size;
     };
@@ -472,30 +450,20 @@ public:
     // return the head item, and then remove that from the List
     T pop_front() {
         if (empty()) throw "List is empty.";
-        T t = _node_head->next->data;
-        Node* dptr = _node_head->next;
-        _node_head->next = dptr->next;
-        dptr->next->prev = _node_head;
-        delete dptr;
-        --_size;
-        return t;
-        /*
+        T t = _node_head->data;
         if (_size == 1) {
-            delete _node_head->next;
-            _node_head->next
-            = _node_head->prev
-                = _node_head;
-                --_size;
-                return t;
-            }
-            Node* ptr = _node_head->next;
-            _node_head->next->prev = _node_head->prev;
-            _node_head->prev->next = _node_head->next;
             delete _node_head;
-            _node_head = ptr;
+            _node_head = nullptr;
             --_size;
             return t;
-        */
+        }
+        Node* ptr = _node_head->next;
+        _node_head->next->prev = _node_head->prev;
+        _node_head->prev->next = _node_head->next;
+        delete _node_head;
+        _node_head = ptr;
+        --_size;
+        return t;
     };
     // return the tail item, and then remove that from the List
     T pop_back() {
@@ -543,18 +511,7 @@ public:
     bool remove(size_t index_) {};
 
     // delete all items from List
-    void clear() {
-        for (
-            Node* dptr;
-            _size; --_size
-        ) {
-            dptr = _node_head->next;
-            _node_head->next = dptr->next;
-            delete dptr;
-            // dptr->next->prev = _node_head;
-        }
-        _node_head->prev = _node_head;
-    };
+    void clear() {};
 
     // works as normal Array
     T& operator[](size_t index_) {
@@ -575,7 +532,6 @@ public:
 private:
     size_t _size;
     Node* _node_head;
-    // watcher ptr
     // Node* _node_last;
 };
 
