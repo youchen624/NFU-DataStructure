@@ -85,7 +85,7 @@ public:
             return !operator!=(that);
         };
 
-    private:
+        private:
         ChainNode* _ptr;
     };
     using iterator = ChainIterator;
@@ -315,6 +315,7 @@ public:
     public:
         CircularListIterator(Node* parent_head_, Node* ptr_) : parent_head(parent_head_), ptr(ptr_) {};
         ~CircularListIterator() {};
+<<<<<<< HEAD
 
         T& operator*() const {
             return this->ptr->data;
@@ -352,6 +353,8 @@ public:
         bool operator==(const CircularListIterator& that) const {
             return !operator!=(that);
         };
+=======
+>>>>>>> parent of f3ebdc7 (w13Fa2)
     private:
         Node* ptr;
         Node* parent_head;
@@ -395,6 +398,7 @@ public:
         return this->_size;
     };
 
+<<<<<<< HEAD
     /*
     iterator begin() {
         return iterator(_node_head, (this->empty() ? nullptr : _node_head->next));
@@ -409,6 +413,11 @@ public:
     };
     */
     
+=======
+    iterator begin() {};
+    iterator end() {};
+
+>>>>>>> parent of f3ebdc7 (w13Fa2)
     // append an item at the tail
     size_t push_back(const T& item_) {
         if (empty()) {
@@ -486,7 +495,12 @@ public:
     T pop_back() {
         if (empty()) throw "List is empty.";
         T t = _node_head->prev->data;
-        if (_size == 1) return pop_front();
+        if (_size == 1) {
+            delete _node_head;
+            _node_head = nullptr;
+            --_size;
+            return t;
+        }
         Node* dptr = _node_head->prev;
         dptr->prev->next = _node_head;
         _node_head->prev = dptr->prev;
@@ -496,30 +510,10 @@ public:
     };
 
     // insert, insert an item into the target index, and cause 1 offset for all behind's, then returns whether item that be inserted is the last item of the List
-    bool insert(size_t index_, const T& item_) {
-        if (index_ > _size) throw "Out of range";
-        else if (index_ == _size) return push_back(item_);
-        else if (!index_) return push_front(item_); // || empty()
-        Node* pptr = _search(index_ - 1);
-        pptr->next
-            = pptr->next->prev
-            = new Node(item_, pptr->next, pptr);
-        ++_size;
-        return false;
-    };
+    bool insert(size_t index_, const T& item_) {};
 
-    // delete, dump an item, and cause -1 offset for all behind's, then returns the item which be dumped
-    T remove(size_t index_) {
-        if (index_ > _size) throw "Out of range"; // return false;
-        else if (index_ == _size) return pop_back();
-        else if (!index_) return pop_front(); // || empty()
-        Node* dptr = _search(index_ );
-        T t = dptr->data;
-        dptr->prev->next = dptr->next;
-        dptr->next->prev = dptr->prev;
-        --_size;
-        return t;
-    };
+    // delete, delete an item, and cause -1 offset for all behind's, then returns whether deleted anything
+    bool remove(size_t index_) {};
 
     // delete all items from List
     void clear() {
