@@ -281,6 +281,8 @@ protected:
         Node* next;
         Node* prev;
     public:
+        // void* operator new(size_t size) {};
+        // void operator delete(Node*, size_t) {};
         Node(const T& data_ = {}, Node* next_ = nullptr, Node* prev_ = nullptr) : data(data_), next(next_), prev(prev_) {};
         ~Node() {};
     };
@@ -308,6 +310,7 @@ protected:
             }
         }
     };
+
     /*
 public:
     class CircularListIterator {
@@ -352,6 +355,10 @@ public:
     };
     using iterator = CircularListIterator;
     */
+
+    // Node* _node_require(T& _item, Node* next_, Node* prev_) {};
+    // void _node_release(Node* ptr_) {};
+
 public:
     CircularList() : _size(0) {};
     ~CircularList() {};
@@ -459,6 +466,9 @@ public:
         return t;
     };
 
+    // sort
+    // void sort() {};
+
     // insert, insert an item into the target index, and cause 1 offset for all behind's, then returns whether item that be inserted is the last item of the List
     bool insert(size_t index_, const T& item_) {
         if (index_ > _size) throw "Out of range";
@@ -515,7 +525,7 @@ public:
     */
 
     void debug() {};
-private:
+protected:
     size_t _size;
     Node* _node_head;
     // Node* _node_last;
@@ -523,6 +533,49 @@ private:
 
 // CircularList #END
 
+
+// Polynomial #BEGIN
+// w14Fa1 251212
+
+class Polynomial
+{
+    friend istream &operator>>(istream &is, Polynomial &x);
+    friend ostream &operator<<(ostream &is, Polynomial &x);
+
+protected:
+    typedef struct Term {
+        int coef;
+        int exp;
+    } Term;
+    void _narrow() {};
+    void _dump() {
+        CircularList<Term>* new_nodes = new CircularList<Term>();
+        for (size_t i; i < nodes->size(); ++i) {
+            if ((*nodes)[i].coef) new_nodes->push_back((*nodes)[i]);
+        }
+        delete nodes;
+        nodes = new_nodes;
+    };
+
+public:
+    Polynomial() {};
+    Polynomial(const Polynomial &a) {};
+    ~Polynomial() {
+        // delete _node ss (link)
+    };
+
+    const Polynomial &operator=(const Polynomial a) {};
+    Polynomial operator+(const Polynomial b) {};
+    Polynomial operator-(const Polynomial b) {};
+    Polynomial operator*(const Polynomial b) {};
+
+    float Evaluate(float x) const {};
+
+private:
+    CircularList<Term>* nodes;
+};
+istream &operator>>(istream &is, Polynomial &x) {};
+ostream &operator<<(ostream &is, Polynomial &x) {};
 
 
 /*
@@ -642,6 +695,10 @@ private:
 istream &operator>>(istream &is, Polynomial &x) {};
 istream &operator>>(istream &is, Polynomial &x) {};
 */
+
+// Polynomial #END
+
+
 
 /*
 int main()
