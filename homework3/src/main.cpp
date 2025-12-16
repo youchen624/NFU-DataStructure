@@ -1,4 +1,5 @@
 #include <iostream>
+
 using namespace std;
 
 // Chain #BEGIN
@@ -311,7 +312,7 @@ protected:
         }
     };
 
-    /*
+
 public:
     class CircularListIterator {
     public:
@@ -350,11 +351,11 @@ public:
         bool operator==(const CircularListIterator& that) const {
             return !operator!=(that);
         };
+
     private:
         Node* ptr;
     };
     using iterator = CircularListIterator;
-    */
 
     // Node* _node_require(T& _item, Node* next_, Node* prev_) {};
     // void _node_release(Node* ptr_) {};
@@ -391,10 +392,10 @@ public:
         return this->_size;
     };
 
-    /*
     iterator begin() {
         return iterator(_node_head);
     };
+    /*
     iterator end() {
         return iterator(nullptr);
     };
@@ -495,6 +496,8 @@ public:
         return t;
     };
 
+    // T remove(iterator position_);
+
     // delete all items from List
     void clear() {
         for (
@@ -547,11 +550,36 @@ protected:
         int coef;
         int exp;
     } Term;
-    void _narrow() {};
-    void _dump() {
+    void _sort() {
+        if (nodes->empty()) return;
+    };
+
+    // narrow the List, merge all same Terms which have same exp
+    void _narrow() {
+        if (nodes->empty()) return;
         CircularList<Term>* new_nodes = new CircularList<Term>();
-        for (size_t i; i < nodes->size(); ++i) {
-            if ((*nodes)[i].coef) new_nodes->push_back((*nodes)[i]);
+        CircularList<Term>::iterator itr = nodes->begin();
+        new_nodes->push_back(*(itr++));
+        CircularList<Term>::iterator itl = new_nodes->begin();
+        for (size_t i = 1; i < nodes->size(); ++i, ++itr) {
+            if ((*itl).exp == (*itr).exp) {
+                (*itl).coef += (*itr).coef;
+            } else {
+                new_nodes->push_back(*itr);
+                ++itl;
+            }
+            delete nodes;
+            nodes = new_nodes;
+        }
+    };
+    
+    // dump all Terms that value of coef is zero
+    void _dump() {
+        if (nodes->empty()) return;
+        CircularList<Term>* new_nodes = new CircularList<Term>();
+        CircularList<Term>::iterator itr = nodes->begin();
+        for (size_t i = 0; i < nodes->size(); ++i, ++itr) {
+            if ((*itr).coef) new_nodes->push_back(*itr);
         }
         delete nodes;
         nodes = new_nodes;
@@ -569,7 +597,14 @@ public:
     Polynomial operator-(const Polynomial b) {};
     Polynomial operator*(const Polynomial b) {};
 
-    float Evaluate(float x) const {};
+    float Evaluate(float x) const {
+        float t = 0.0f;
+        CircularList<Term>::iterator itr = nodes->begin();
+        for (size_t i = 0; i < nodes->size(); ++i, ++itr) {
+            t += (*itr).coef * pow(x, (*itr).exp);
+        }
+        return t;
+    };
 
 private:
     CircularList<Term>* nodes;
