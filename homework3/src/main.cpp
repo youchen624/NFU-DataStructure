@@ -509,7 +509,8 @@ public:
             delete dptr;
             // dptr->next->prev = _node_head;
         }
-        _node_head->prev = _node_head;
+        // _node_head->prev = _node_head;
+        _node_head = nullptr;
     };
 
     // works as normal Array
@@ -549,7 +550,11 @@ protected:
     typedef struct Term {
         int coef;
         int exp;
+        Term(int c = 0, int e = 0) :coef(c), exp(e) {};
+        Term operator-() { return Term(-coef, exp); };
+        Term operator*(const Term& that) { return Term(coef*that.coef, exp+that.exp); };
     } Term;
+
     void _sort() {
         if (nodes->empty()) return;
     };
@@ -586,16 +591,98 @@ protected:
     };
 
 public:
-    Polynomial() {};
-    Polynomial(const Polynomial &a) {};
+    Polynomial() {
+        nodes = new CircularList<Term>();
+    };
+    Polynomial(const Polynomial &that) : Polynomial() {
+        *this = that;
+        // CircularList<Term>::iterator itr = a.nodes->begin();
+        // for (size_t i = 0; i < a.nodes->size(); ++i) {
+        //     this->nodes->push_back(*itr);
+        // }
+    };
     ~Polynomial() {
-        // delete _node ss (link)
+        delete nodes;
     };
 
-    const Polynomial &operator=(const Polynomial a) {};
-    Polynomial operator+(const Polynomial b) {};
-    Polynomial operator-(const Polynomial b) {};
-    Polynomial operator*(const Polynomial b) {};
+    const Polynomial &operator=(const Polynomial &that) {
+        if (this == &that) return *this;   // almost forgot, a danger bug, a cute cmd
+        this->nodes->clear();
+        CircularList<Term>::iterator itr = that.nodes->begin();
+        for (size_t i = 0; i < that.nodes->size(); ++i) {
+            this->nodes->push_back(*itr);
+        }
+        return *this;
+    };
+    Polynomial operator+(const Polynomial that) {
+        Polynomial poly;
+        size_t i_this = this->nodes->size(), i_that = that.nodes->size();
+        CircularList<Term>::iterator itr_this = this->nodes->begin();
+        CircularList<Term>::iterator itr_that = that.nodes->begin();
+        while (i_this || i_that) {
+            if (!i_this) {
+                poly.nodes->push_back(*itr_that);
+                ++itr_that;
+                --i_that;
+            } else if (!i_that) {
+                poly.nodes->push_back(*itr_this);
+                ++itr_this;
+                --i_this;
+            } else if ((*itr_this).exp == (*itr_that).exp) {
+                poly.nodes->push_back(
+                    Term((*itr_this).coef + (*itr_that).coef, (*itr_this).exp)
+                );
+                ++itr_this; --i_this;
+                ++itr_that; --i_that;
+            } else if ((*itr_this).exp < (*itr_that).exp) {
+                poly.nodes->push_back(*itr_this);
+                ++itr_this; --i_this;
+            } else {
+                poly.nodes->push_back(*itr_that);
+                ++itr_that; --i_that;
+            }
+        };
+        return poly;
+    };
+    Polynomial operator-() {
+        Polynomial poly = Polynomial(*this);
+        CircularList<Term>::iterator itr = poly.nodes->begin();
+        for (size_t i = 0; i < poly.nodes->size(); ++i) {
+            (*itr).coef *= -1;
+        }
+        return poly;
+    };
+    Polynomial operator-(const Polynomial that) {
+        Polynomial poly;
+        size_t i_this = this->nodes->size(), i_that = that.nodes->size();
+        CircularList<Term>::iterator itr_this = this->nodes->begin();
+        CircularList<Term>::iterator itr_that = that.nodes->begin();
+        while (i_this || i_that) {
+            if (!i_this) {
+                poly.nodes->push_back(-(*itr_that));
+                ++itr_that;
+                --i_that;
+            } else if (!i_that) {
+                poly.nodes->push_back(*itr_this);
+                ++itr_this;
+                --i_this;
+            } else if ((*itr_this).exp == (*itr_that).exp) {
+                poly.nodes->push_back(
+                    Term((*itr_this).coef - (*itr_that).coef, (*itr_this).exp)
+                );
+                ++itr_this; --i_this;
+                ++itr_that; --i_that;
+            } else if ((*itr_this).exp < (*itr_that).exp) {
+                poly.nodes->push_back(*itr_this);
+                ++itr_this; --i_this;
+            } else {
+                poly.nodes->push_back(-(*itr_that));
+                ++itr_that; --i_that;
+            }
+        };
+        return poly;
+    };
+    Polynomial operator*(const Polynomial that) {};
 
     float Evaluate(float x) const {
         float t = 0.0f;
@@ -604,6 +691,10 @@ public:
             t += (*itr).coef * pow(x, (*itr).exp);
         }
         return t;
+    };
+
+    size_t length() {
+        return nodes->size();
     };
 
 private:
