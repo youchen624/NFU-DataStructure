@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 
 using namespace std;
 
@@ -277,6 +278,7 @@ class CircularList {
 protected:
     class Node {
     friend class CircularList;
+    friend class CircularListIterator;
     private:
         T data;
         Node* next;
@@ -316,8 +318,24 @@ protected:
 public:
     class CircularListIterator {
     public:
-        CircularListIterator(Node* ptr_) : ptr(ptr_) {};
+        CircularListIterator(CircularList* parent_, Node* ptr_) : parent(parent_), ptr(ptr_) {};
+        // CircularListIterator(Node* ptr_) : ptr(ptr_) {};
         ~CircularListIterator() {};
+
+        CircularListIterator& insert_next(const T& item_) {
+            ptr->next
+                = ptr->next->prev
+                = new Node(item_, ptr->next, ptr);
+            ++ parent->_size;
+            return *this;
+        };
+        CircularListIterator& insert_prev(const T& item_) {
+            ptr->prev
+                = ptr->prev->next
+                = new Node(item_, ptr, ptr->prev);
+            ++ parent->_size;
+            return *this;
+        };
 
         T& operator*() const {
             return this->ptr->data;
@@ -326,11 +344,26 @@ public:
             return &(this->ptr->data);
         };
 
+        // circling getter
+        // get the value of index which offset at current, e.x.: at 2, using "[5]", got [7]
+        // using [0] will got value of current index
+        // #CAUTION using int64_t, allowed negative, but have to notice with size_t or others unsigned type
+        T& operator[](int64_t offset) const {
+            if (!offset) return **this;
+            Node* tptr = this->ptr;
+            if (offset > 0) {
+                while (offset--) tptr = tptr->next;
+            } else {
+                while (offset++) tptr = tptr->prev;
+            }
+            return tptr->data;
+        };
+
         CircularListIterator& operator++() {
             this->ptr = this->ptr->next;
             return *this;
         };
-        CircularListIterator& operator++(int) {
+        CircularListIterator operator++(int) {
             CircularListIterator t = *this;
             this->ptr = this->ptr->next;
             return t;
@@ -354,6 +387,7 @@ public:
 
     private:
         Node* ptr;
+        CircularList* parent;
     };
     using iterator = CircularListIterator;
 
@@ -393,7 +427,7 @@ public:
     };
 
     iterator begin() {
-        return iterator(_node_head);
+        return iterator(this, _node_head);
     };
     /*
     iterator end() {
@@ -528,7 +562,15 @@ public:
     CircularList connect(CircularList& that) {};
     */
 
-    void debug() {};
+    void debug() {
+        cout  << "[ ";
+        iterator itr = begin();
+        for (size_t i = 0; i < _size; ++i, ++itr) {
+            if (i) cout << " ,";
+            cout << *itr;
+        }
+        cout << " ]";
+    };
 protected:
     size_t _size;
     Node* _node_head;
@@ -544,19 +586,27 @@ protected:
 class Polynomial
 {
     friend istream &operator>>(istream &is, Polynomial &x);
-    friend ostream &operator<<(ostream &is, Polynomial &x);
+    friend ostream &operator<<(ostream &is, const Polynomial &x);
 
-protected:
+public:
     typedef struct Term {
         int coef;
         int exp;
         Term(int c = 0, int e = 0) :coef(c), exp(e) {};
         Term operator-() { return Term(-coef, exp); };
         Term operator*(const Term& that) { return Term(coef*that.coef, exp+that.exp); };
+        /// #DEBUG
+        friend ostream& operator<<(ostream& output, const Polynomial::Term& term) {
+            output << "T(" << term.coef << ", " << term.exp << ")";
+            return output;
+        };
     } Term;
+
+protected:
 
     void _sort() {
         if (nodes->empty()) return;
+        ;
     };
 
     // narrow the List, merge all same Terms which have same exp
@@ -594,7 +644,7 @@ public:
     Polynomial() {
         nodes = new CircularList<Term>();
     };
-    Polynomial(const Polynomial &that) : Polynomial() {
+    Polynomial(const Polynomial& that) : Polynomial() {
         *this = that;
         // CircularList<Term>::iterator itr = a.nodes->begin();
         // for (size_t i = 0; i < a.nodes->size(); ++i) {
@@ -605,17 +655,44 @@ public:
         delete nodes;
     };
 
-    const Polynomial &operator=(const Polynomial &that) {
+    const Polynomial& operator+=(const Term& term) {
+        if (nodes->empty()) {
+            nodes->push_back(term);
+            return *this;
+        }
+        CircularList<Term>::iterator itr = nodes->begin();
+        if (itr->exp < term.exp) {
+            nodes->push_front(term);
+            return *this;
+        } else if ((--itr)->exp > term.exp) {
+            nodes->push_back(term);
+            return *this;
+        }
+        while ((++itr)->exp > term.exp) { true; };
+        if (itr->exp == term.exp) {
+            itr->coef += term.coef;
+        } else {    // <
+            itr.insert_prev(term);
+        }
+        return *this;
+    };
+
+    const Polynomial& operator=(const Polynomial& that) {
         if (this == &that) return *this;   // almost forgot, a danger bug, a cute cmd
         this->nodes->clear();
         CircularList<Term>::iterator itr = that.nodes->begin();
-        for (size_t i = 0; i < that.nodes->size(); ++i) {
+        for (size_t i = 0; i < that.nodes->size(); ++i, ++itr) {    // forgot "++itr", then cause logic error
             this->nodes->push_back(*itr);
         }
         return *this;
     };
-    Polynomial operator+(const Polynomial that) {
-        Polynomial poly;
+    Polynomial operator+(const Polynomial& that) {
+        Polynomial poly = *this;
+        CircularList<Term>::iterator itr = that.nodes->begin();
+        for (size_t i = 0; i < that.length(); ++i) {
+            poly += *(itr++);
+        }
+        /*
         size_t i_this = this->nodes->size(), i_that = that.nodes->size();
         CircularList<Term>::iterator itr_this = this->nodes->begin();
         CircularList<Term>::iterator itr_that = that.nodes->begin();
@@ -642,6 +719,7 @@ public:
                 ++itr_that; --i_that;
             }
         };
+        */
         return poly;
     };
     Polynomial operator-() {
@@ -652,7 +730,14 @@ public:
         }
         return poly;
     };
-    Polynomial operator-(const Polynomial that) {
+    Polynomial operator-(const Polynomial& that) {
+        Polynomial poly = *this;
+        CircularList<Term>::iterator itr = that.nodes->begin();
+        for (size_t i = 0; i < that.length(); ++i) {
+            poly += *(itr++);
+        }
+        return poly;
+        /*
         Polynomial poly;
         size_t i_this = this->nodes->size(), i_that = that.nodes->size();
         CircularList<Term>::iterator itr_this = this->nodes->begin();
@@ -680,9 +765,23 @@ public:
                 ++itr_that; --i_that;
             }
         };
+        */
+    };
+    Polynomial operator*(const Polynomial& that) {
+        Polynomial poly;
+        CircularList<Term>::iterator
+            itr_this = this->nodes->begin(),
+            itr_that = that.nodes->begin();
+        for (size_t i_this = 0; i_this < this->length(); ++itr_this, ++i_this) {
+            for (size_t i_that = 0; i_that < that.length(); ++itr_that, ++i_that) {
+                poly += Term(itr_this->coef * itr_that->coef, itr_this->exp + itr_that->exp);
+                cout << "(" << *itr_this << " * "<< *itr_that << ")";
+                poly.debug();
+            }
+        }
+        poly._dump();
         return poly;
     };
-    Polynomial operator*(const Polynomial that) {};
 
     float Evaluate(float x) const {
         float t = 0.0f;
@@ -693,15 +792,32 @@ public:
         return t;
     };
 
-    size_t length() {
+    size_t length() const {
         return nodes->size();
     };
 
+
+    void debug() {
+        cout <<"p=";
+        nodes->debug();
+        cout<<"\n";
+    };
 private:
     CircularList<Term>* nodes;
 };
-istream &operator>>(istream &is, Polynomial &x) {};
-ostream &operator<<(ostream &is, Polynomial &x) {};
+istream &operator>>(istream &input, Polynomial &x) {
+    int a, b;
+    input >> a >> b;
+    x += Polynomial::Term(a, b);
+    return input;
+};
+ostream &operator<<(ostream &output, const Polynomial &x) {
+    CircularList<Polynomial::Term>::iterator itr = (x.nodes->begin());
+    for (size_t i = 0; i < x.length(); ++i, ++itr) {
+        output << "(" << (itr)->coef << " " << itr->exp << ")";
+    };
+    return output;
+};
 
 
 /*
@@ -917,6 +1033,39 @@ int main()
 
 int main()
 {
+    int na, nb;
+    Polynomial A, B;
+    cin >> na >> nb;
+    while(na--) {
+        cin >> A;
+        A.debug();
+    }
+    while(nb--) {
+        cin >> B;
+        B.debug();
+    }
+
+    cout << "A=" << A << endl;
+    cout << "A+B=" << (A + B) << endl;
+    cout << "A=" << A << endl;
+    cout << "A-B=" << (A - B) << endl;
+    cout << "A*B=" << (A * B) << endl;
+    // cout << "A/B=" << (A / B) << endl;
+
+
+    /*
+    Polynomial poly;
+    int n;
+    cin >> n;
+    while (n--) {
+        cin >> poly;
+    }
+    cout << "result:\n" << poly << endl;
+    */
+
+
+
+    /*
     CircularList<int> c;
     for (int i = 0; i < 20; ++i) {
         c.push_back(i);
@@ -998,5 +1147,6 @@ int main()
     cout << "c.index_of_opposite(2)=" << c.index_of_opposite(2) << endl;
     cout << "c.index_of(200)=" << c.index_of(200) << endl;
     cout << "c.index_of_opposite(200)=" << c.index_of_opposite(200) << endl;
+    */
     return 0;
 }
