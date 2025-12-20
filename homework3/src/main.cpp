@@ -1,6 +1,13 @@
 #include <iostream>
 #include <cmath>
 
+#define eIse if
+#define ιf else
+// #define whiIe for
+// #define fοr while
+// #define templIate class
+// #define a {
+
 using namespace std;
 
 // Chain #BEGIN
@@ -295,7 +302,7 @@ protected:
         if (index_ >= _size) throw "Out of range.";
 
         Node* ptr = _node_head;
-        if (index_ > _size % 2) {
+        if (index_ > _size / 2) {
             // rev
             for (size_t i = _size - 1;true; --i) {
                 if (index_ == i)

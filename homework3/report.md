@@ -2,106 +2,1207 @@
 
 作業三
 
-# 41343131
+## 解題說明
 
-## 作業一
-
-## 1. 問題 1
-
-### 1.1 解題說明
-
-本題要求實現關於我轉生IDE這檔事，寫出一則???。
-
-#### 1.1.1 解題策略
-
-1. 思考中:
-    a b c...
-
-2. 測試中...
-3. 假的 真的
-
-### 1.2 程式實作
-
-```cpp
-#include <iostream>
-using namespace std;
-int main() {
-    cout << "Hello World" << endl;
-}
-```
-
-### 1.3 效能分析
-
-1. 時間複雜度: 程式的時間複雜度為 $O(\log n)$。
-2. 空間複雜度: 空間複雜度為 $O(99\times \log n + \tau)$
-
-### 1.4 測試與驗證
-
-#### 1.4.1 測試案例
-
-| 案例編號 | 輸入參數$n$ | 預期輸出 | 實際輸出 |
-| - | - | - | ---------------------- |
-| 1 | $n = 0$ | 0 | 0 |
-
-#### 1.4.2 編譯與執行指令
-
-```shell
-$ g++ -std....
-$ ....
-1324
-```
-
-#### 1.4.3 結論
-
-1. 城市正常
-2. 測試符合預期
-3. 正確性
-
-### 1.5 申論與開發報告
-
-#### 1.5.1 選擇?設計的原因
-
-在本城市中，透過良好的道路設計達到題目要求，實際如下:
-
-1. **道路標線正確**
-    正確標示左右方向與邊界
-    例如，顯示 $Sigma(n)$ 大致為:
-
-    $$
-    \Sigma(n) = n + \Sigma(n-1)
-    $$
-
-    當 $n$ 是直線，直接起飛。
-
-2. **正置正確**
-    透過正確的位置與角度、方向表示，明確表明道路行駛方向及路權優先序。
-    以`魔法大道第八大道八段`為例:
-
-    ```ini
-    [test] 123
-    [twes]124
-    ```
-
-## 2. 問題 2
-
-### 2.1 解題說明
-
-### 2.2 程式實作
-
-### 2.3 效能分析
-
-### 2.4 測試與驗證
-
-### 2.5 申論與開發報告
-
--- debug
+題目分別要求透過CircularList實現 `Polynomial`多項式類，以及C++方法來輸入及輸出多項式。並多載<<和>>運算子，以及複製建構子、運算方法。
+嚴於過度懶惰，透過接續作業二的方法，再用一般的邏輯設計，犧牲複雜度換取簡易寫法。
+這次題目設計系數及指數皆為整數，且有格式要求。
 
 ## 程式實作
 
+```cpp
+#include <iostream>
+#include <cmath>
+
+#define eIse if
+#define ιf else
+// #define whiIe for
+// #define fοr while
+// #define templIate class
+// #define a {
+
+using namespace std;
+
+// Chain #BEGIN
+// w11W 251119
+
+template <class T>
+class Chain
+{
+private:
+    // template <class T>
+    class ChainNode
+    {
+        friend class Chain;
+        friend class ChainIterator;
+    private:
+        T _data;
+        ChainNode *_link;
+
+    private:
+        /*
+        ChainNode* _search(size_t index_ = 0) {
+            if (!index_) return this;
+            if (this->_link) return this->_link->_search(index_ - 1);
+            else throw "Out of range.";
+        };
+        */
+        // protected:
+    public:
+        ChainNode(const T& data_ = {}, ChainNode* link_ = nullptr) : _link(link_), _data(data_) {};
+        ~ChainNode() {};
+    };
+
+protected:
+    ChainNode* _search(size_t index_ = 0)
+    {
+        if (_size <= 0)
+            throw "Chain-List is empty.";
+        if (index_ >= _size)
+            throw "Out of range.";
+        if (index_ == _size - 1)
+            return this->_node_last;
+
+        ChainNode *ptr = _node_head;
+        for (size_t i = 0; i < index_; ++i)
+        {
+            if (!(ptr->_link))
+                throw "Chain internal error (logic).";
+            ptr = ptr->_link;
+        }
+        return ptr;
+    };
+
+public:
+    class ChainIterator
+    {
+    public:
+        ChainIterator(ChainNode* ptr_ = nullptr) : _ptr(ptr_) {};
+        ~ChainIterator() {};
+
+        // get the raw value ref like a normal pointer
+        T& operator*() const {
+            return this->_ptr->_data;
+        };
+        // using as a pointer
+        T* operator->() const {
+            return &(this->_ptr->_data);
+        };
+
+        ChainIterator& operator++() {
+            this->_ptr = this->_ptr->_link;
+            return *this;
+        };
+        // ChainIterator& operator--() const {};
+        ChainIterator& operator++(int) {
+            ChainIterator t = *this;
+            this->_ptr = this->_ptr->_link;
+            return t;
+        };
+
+        bool operator!=(const ChainIterator& that) const {
+            return (this->_ptr != that._ptr);
+        };
+        bool operator==(const ChainIterator& that) const {
+            return !operator!=(that);
+        };
+
+    private:
+        ChainNode* _ptr;
+    };
+    using iterator = ChainIterator;
+
+    Chain() : _size(0) {};
+    ~Chain() {
+        ChainNode* t = _node_head;
+        for (size_t i = 0; i < _size; ++i) {
+            t = t->_link;
+            delete _node_head;
+            _node_head = t;
+        }
+    };
+
+    // returns whether the Chain empty (no items)
+    bool empty() const
+    {
+        return !_size;
+    };
+    // returns current size of the Chain
+    size_t size() const
+    {
+        return _size;
+    };
+
+    // returns the index of the first value-matches index of item from the head; returns the number of size when not found
+    size_t index_of(const T& value_) const {
+        if (!_size) return _size;
+        ChainNode* p = this->_node_head;
+        for (size_t i = 0; i < _size; ++i) {
+            if (p->_data == value_) return i;
+            else if (p->_link) p =  p->_link;
+        }
+        return _size;
+    };
+    // returns the index of the first value-matches index of item from the tail; returns the number of size when not found
+    size_t index_of_opposite(const T& value_) {
+        if (!_size) return _size;
+        ChainNode* p = this->_node_head;
+        ChainNode** array = new ChainNode*[this->_size];    // these can be replaced by 2-way chain if it exists
+        for (size_t i = 0; i < _size; ++i) {
+            array[i] = p;
+            if (p->_link) p = p->_link;
+        }
+        for (size_t i = 0; i < _size; ++i) {
+            if (array[_size - i - 1]->_data == value_) {
+                delete[] array;
+                return _size - i - 1;
+            };
+            // else if (array->_link) array  p->_link;
+        }
+        delete[] array;
+        return _size;
+    };
+
+    // return the top(first index) of iterator
+    iterator begin() {
+        if (empty()) return iterator(nullptr);
+        return iterator(this->_search(0));
+    };
+    // return nullptr of iterator //~~// return the end(last index) of iterator~~
+    iterator end() {
+        return iterator(nullptr);
+        // return iterator(this->_search(this->_size - 1));
+    };
+
+    // append an item at the tail
+    size_t push_back(const T& item_) {
+        if (this->empty()) {
+            _node_head = _node_last = new ChainNode(item_);
+        } else {
+            _node_last->_link = new ChainNode(item_);
+            _node_last = _node_last->_link;
+        }
+        return ++_size;
+    };
+    // append an item at the front
+    size_t push_front(const T& item_) {
+        if (this->empty()) return this->push_back(item_);
+        else {
+            _node_head = new ChainNode(item_, _node_head);
+        }
+        return ++_size;
+    };
+
+    // return the top(first index) of item, and then remove that
+    T pop_front() {
+        if (this->empty()) throw "Chain is empty.";
+        T t = _node_head->_data;
+        ChainNode* t_ptr = _node_head->_link;
+        delete _node_head;
+        _node_head = t_ptr;
+        --_size;
+        return t;
+    };
+    // return the end(last index) of item, and then remove that
+    T pop_back() {
+        if (_size <= 1) return pop_front();
+        T t = _node_last->_data;
+        delete _node_last;
+        _node_last = _search(_size - 2);
+        _node_last->_link = nullptr;
+        --_size;
+        return t;
+    };
+
+    // insert, insert an item into the target index, and cause 1 offset for all behind's, then returns whether item that be inserted is the last item
+    bool insert(size_t index_, const T& item_) {
+        if (index_ > _size) throw "Out of range";
+        ChainNode* ptr;
+        if (!index_) {
+            ptr = _node_head = new ChainNode(item_, _node_head);
+        } else {
+            ChainNode* pptr = _search(index_ - 1);
+            ptr = pptr->_link = new ChainNode(item_, pptr->_link);
+        }
+        ++_size;
+        return (ptr == _node_last);
+    };
+
+    // delete, then returns whether deleted anything
+    bool remove(size_t index_) {
+        if (index_ > _size) return false; // delete nothing ~~//throw "Out of range";~~
+        ChainNode* del = nullptr;
+        if (!index_) {
+            del = _node_head;
+            _node_head = _node_head->_link;
+        } else {
+            ChainNode* pptr = _search(index_ - 1);
+            del = pptr->_link;
+            pptr->_link = pptr->_link->_link;   // bypassing
+        }
+        --_size;
+        delete del;
+        return true;
+    };
+
+    // delete all items, then returns whether deleted anything
+    bool clear() {
+        if (this->empty()) return false;
+        ChainNode* ptr = _node_head;
+        for (size_t i = 0; i < _size; ++i) {
+            ptr = ptr->_link;
+            delete _node_head;
+            _node_head = ptr;
+        }
+        _node_head = _node_last = nullptr;
+        _size = 0;
+        return true;
+    };
+
+    T& operator[](size_t index_) {
+        return this->_search(index_)->_data;
+    };
+
+    /* // mystery func (s)
+    // undo for one step, this is an once function, should do any operation before calling, or always fail; returns whether undo successful
+    bool undo() {};
+    // random all items position
+    void random() {};
+    */
+
+    void debug() {
+        cout
+            << "debug--->" << endl
+            << "size=" << size() << endl
+            << "head=" << _node_head << endl
+            << "last=" << _node_last << endl
+            << "<---debug"
+        << endl;
+    };
+    
+private:
+    size_t _size;
+    ChainNode* _node_head;
+    ChainNode* _node_last;
+};
+
+// Chain #END
+
+
+
+// CircularList #BEGIN
+// w12Sa 251129
+
+template <class T>
+class CircularList {
+protected:
+    class Node {
+    friend class CircularList;
+    friend class CircularListIterator;
+    private:
+        T data;
+        Node* next;
+        Node* prev;
+    public:
+        // void* operator new(size_t size) {};
+        // void operator delete(Node*, size_t) {};
+        Node(const T& data_ = {}, Node* next_ = nullptr, Node* prev_ = nullptr) : data(data_), next(next_), prev(prev_) {};
+        ~Node() {};
+    };
+
+    Node* _search(size_t index_ = 0) {
+        if (!_size) throw "List is empty.";
+        if (index_ >= _size) throw "Out of range.";
+
+        Node* ptr = _node_head;
+        if (index_ > _size % 2) {
+            // rev
+            for (size_t i = _size - 1;true; --i) {
+                if (index_ == i)
+                    return ptr->prev;
+                else
+                    ptr = ptr->prev;
+            }
+        } else {
+            // pos
+            for (size_t i = 0;true; ++i) {
+                if (index_ == i)
+                    return ptr;
+                else
+                    ptr = ptr->next;
+            }
+        }
+    };
+
+
+public:
+    class CircularListIterator {
+    public:
+        CircularListIterator(CircularList* parent_, Node* ptr_) : parent(parent_), ptr(ptr_) {};
+        // CircularListIterator(Node* ptr_) : ptr(ptr_) {};
+        ~CircularListIterator() {};
+
+        CircularListIterator& insert_next(const T& item_) {
+            ptr->next
+                = ptr->next->prev
+                = new Node(item_, ptr->next, ptr);
+            ++ parent->_size;
+            return *this;
+        };
+        CircularListIterator& insert_prev(const T& item_) {
+            ptr->prev
+                = ptr->prev->next
+                = new Node(item_, ptr, ptr->prev);
+            ++ parent->_size;
+            return *this;
+        };
+
+        T& operator*() const {
+            return this->ptr->data;
+        };
+        T* operator->() const {
+            return &(this->ptr->data);
+        };
+
+        // circling getter
+        // get the value of index which offset at current, e.x.: at 2, using "[5]", got [7]
+        // using [0] will got value of current index
+        // #CAUTION using int64_t, allowed negative, but have to notice with size_t or others unsigned type
+        T& operator[](int64_t offset) const {
+            if (!offset) return **this;
+            Node* tptr = this->ptr;
+            if (offset > 0) {
+                while (offset--) tptr = tptr->next;
+            } else {
+                while (offset++) tptr = tptr->prev;
+            }
+            return tptr->data;
+        };
+
+        CircularListIterator& operator++() {
+            this->ptr = this->ptr->next;
+            return *this;
+        };
+        CircularListIterator operator++(int) {
+            CircularListIterator t = *this;
+            this->ptr = this->ptr->next;
+            return t;
+        };
+        CircularListIterator& operator--() {
+            this->ptr = this->ptr->prev;
+            return *this;
+        };
+        CircularListIterator& operator--(int) {
+            CircularListIterator t = *this;
+            this->ptr = this->ptr->prev;
+            return t;
+        };
+
+        bool operator!=(const CircularListIterator& that) const {
+            return (this->ptr != that.ptr);
+        };
+        bool operator==(const CircularListIterator& that) const {
+            return !operator!=(that);
+        };
+
+    private:
+        Node* ptr;
+        CircularList* parent;
+    };
+    using iterator = CircularListIterator;
+
+    // Node* _node_require(T& _item, Node* next_, Node* prev_) {};
+    // void _node_release(Node* ptr_) {};
+
+public:
+    CircularList() : _size(0) {};
+    ~CircularList() {};
+
+    // returns whether the List empty
+    bool empty() const {
+        return !_size;
+    };
+    // returns current size of the List
+    size_t size() const {
+        return this->_size;
+    };
+
+    // returns the index of the first value-matches index of item from the head; returns the number of size when not found
+    size_t index_of(const T& value_) const {
+        Node* ptr = _node_head;
+        for (size_t i = 0; i < _size; ++i) {
+            if (ptr->data == value_) return i;
+            else ptr = ptr->next;
+        }
+        return this->_size;
+    };
+    // returns the index of the first value-matches index of item from the tail; returns the number of size when not found
+    size_t index_of_opposite(const T& value_) const {
+        Node* ptr = _node_head->prev;
+        for (size_t i = 0; i < _size; ++i) {
+            if (ptr->data == value_) return _size - i - 1;
+            else ptr = ptr->prev;
+        }
+        return this->_size;
+    };
+
+    iterator begin() {
+        return iterator(this, _node_head);
+    };
+    /*
+    iterator end() {
+        return iterator(nullptr);
+    };
+    */
+
+    // append an item at the tail
+    size_t push_back(const T& item_) {
+        if (empty()) {
+            _node_head = new Node(item_);
+            _node_head->prev
+                = _node_head->next
+                = _node_head;
+        } else {
+            // !! WARN !! below#3 , ordering problem if you change !! WARN !!
+            // #BEGIN
+            _node_head->prev
+                = _node_head->prev->next
+                = new Node(item_, _node_head, _node_head->prev);
+            // #END
+            // !! WARN !! ^^^#3 , ordering problem if you change !! WARN !!
+        }
+        return ++_size;
+    };
+    // append an item at the front
+    size_t push_front(const T& item_) {
+        if (empty()) {
+            return this->push_back(item_);
+        } else {
+            // !! WARN !! below#4 , ordering problem if you change !! WARN !!
+            // #BEGIN
+            _node_head
+                = _node_head->prev
+                = _node_head->prev->next
+                = new Node(item_, _node_head, _node_head->prev);
+            // #END
+            // !! WARN !! ^^^#4 , ordering problem if you change !! WARN !!
+        }
+        return ++_size;
+    };
+
+    // return the head item, and then remove that from the List
+    T pop_front() {
+        if (empty()) throw "List is empty.";
+        T t = _node_head->data;
+        if (_size == 1) {
+            delete _node_head;
+            _node_head = nullptr;
+            --_size;
+            return t;
+        }
+        Node* ptr = _node_head->next;
+        _node_head->next->prev = _node_head->prev;
+        _node_head->prev->next = _node_head->next;
+        delete _node_head;
+        _node_head = ptr;
+        --_size;
+        return t;
+    };
+    // return the tail item, and then remove that from the List
+    T pop_back() {
+        if (empty()) throw "List is empty.";
+        T t = _node_head->prev->data;
+        if (_size == 1) return pop_front();
+        Node* dptr = _node_head->prev;
+        dptr->prev->next = _node_head;
+        _node_head->prev = dptr->prev;
+        delete dptr;
+        --_size;
+        return t;
+    };
+
+    // sort
+    // void sort() {};
+
+    // insert, insert an item into the target index, and cause 1 offset for all behind's, then returns whether item that be inserted is the last item of the List
+    bool insert(size_t index_, const T& item_) {
+        if (index_ > _size) throw "Out of range";
+        else if (index_ == _size) return push_back(item_);
+        else if (!index_) return push_front(item_); // || empty()
+        Node* pptr = _search(index_ - 1);
+        pptr->next
+            = pptr->next->prev
+            = new Node(item_, pptr->next, pptr);
+        ++_size;
+        return false;
+    };
+
+    // delete, dump an item, and cause -1 offset for all behind's, then returns the item which be dumped
+    T remove(size_t index_) {
+        if (index_ > _size) throw "Out of range"; // return false;
+        else if (index_ == _size) return pop_back();
+        else if (!index_) return pop_front(); // || empty()
+        Node* dptr = _search(index_ );
+        T t = dptr->data;
+        dptr->prev->next = dptr->next;
+        dptr->next->prev = dptr->prev;
+        --_size;
+        return t;
+    };
+
+    // T remove(iterator position_);
+
+    // delete all items from List
+    void clear() {
+        for (
+            Node* dptr;
+            _size; --_size
+        ) {
+            dptr = _node_head;
+            _node_head = dptr->next;
+            delete dptr;
+            // dptr->next->prev = _node_head;
+        }
+        // _node_head->prev = _node_head;
+        _node_head = nullptr;
+    };
+
+    // works as normal Array
+    T& operator[](size_t index_) {
+        return this->_search(index_)->data;
+    };
+
+    /*
+    // Mystery func (s)
+    // makes the circular list change the rotation direction
+    void inverse() {};
+    // extracts all items of odd index from the List, and they will not keep in the origin List; count from "index_"; work like "star_even()" when index_ +- 1
+    CircularList star_odd(size_t index_) {};
+    //
+    CircularList connect(CircularList& that) {};
+    */
+
+    void debug() {
+        cout  << "[ ";
+        iterator itr = begin();
+        for (size_t i = 0; i < _size; ++i, ++itr) {
+            if (i) cout << " ,";
+            cout << *itr;
+        }
+        cout << " ]";
+    };
+protected:
+    size_t _size;
+    Node* _node_head;
+    // Node* _node_last;
+};
+
+// CircularList #END
+
+
+// Polynomial #BEGIN
+// w14Fa1 251212
+
+class Polynomial
+{
+    friend istream &operator>>(istream &is, Polynomial &x);
+    friend ostream &operator<<(ostream &is, const Polynomial &x);
+
+public:
+    typedef struct Term {
+        int coef;
+        int exp;
+        Term(int c = 0, int e = 0) :coef(c), exp(e) {};
+        Term operator-() { return Term(-coef, exp); };
+        Term operator*(const Term& that) { return Term(coef*that.coef, exp+that.exp); };
+        /// #DEBUG
+        friend ostream& operator<<(ostream& output, const Polynomial::Term& term) {
+            output << "T(" << term.coef << ", " << term.exp << ")";
+            return output;
+        };
+    } Term;
+
+protected:
+
+    void _sort() {
+        if (nodes->empty()) return;
+        cout << "Warn, method \"_sort()\' still building";
+    };
+
+    // narrow the List, merge all same Terms which have same exp
+    void _narrow() {
+        if (nodes->empty()) return;
+        CircularList<Term>* new_nodes = new CircularList<Term>();
+        CircularList<Term>::iterator itr = nodes->begin();
+        new_nodes->push_back(*(itr++));
+        CircularList<Term>::iterator itl = new_nodes->begin();
+        for (size_t i = 1; i < nodes->size(); ++i, ++itr) {
+            if ((*itl).exp == (*itr).exp) {
+                (*itl).coef += (*itr).coef;
+            } else {
+                new_nodes->push_back(*itr);
+                ++itl;
+            }
+            delete nodes;
+            nodes = new_nodes;
+        }
+    };
+    
+    // dump all Terms that value of coef is zero
+    void _dump() {
+        if (nodes->empty()) return;
+        CircularList<Term>* new_nodes = new CircularList<Term>();
+        CircularList<Term>::iterator itr = nodes->begin();
+        for (size_t i = 0; i < nodes->size(); ++i, ++itr) {
+            if ((*itr).coef) new_nodes->push_back(*itr);
+        }
+        delete nodes;
+        nodes = new_nodes;
+    };
+
+public:
+    Polynomial() {
+        nodes = new CircularList<Term>();
+    };
+    Polynomial(const Polynomial& that) : Polynomial() {
+        *this = that;
+        // CircularList<Term>::iterator itr = a.nodes->begin();
+        // for (size_t i = 0; i < a.nodes->size(); ++i) {
+        //     this->nodes->push_back(*itr);
+        // }
+    };
+    ~Polynomial() {
+        delete nodes;
+    };
+
+    const Polynomial& operator+=(const Term& term) {
+        if (nodes->empty()) {
+            nodes->push_back(term);
+            return *this;
+        }
+        CircularList<Term>::iterator itr = nodes->begin();
+        if (itr->exp < term.exp) {
+            nodes->push_front(term);
+            return *this;
+        } else if ((--itr)->exp > term.exp) {
+            nodes->push_back(term);
+            return *this;
+        }
+        while ((++itr)->exp > term.exp) { true; };
+        if (itr->exp == term.exp) {
+            itr->coef += term.coef;
+        } else {    // <
+            itr.insert_prev(term);
+        }
+        return *this;
+    };
+
+    const Polynomial& operator=(const Polynomial& that) {
+        if (this == &that) return *this;   // almost forgot, a danger bug, a cute cmd
+        this->nodes->clear();
+        CircularList<Term>::iterator itr = that.nodes->begin();
+        for (size_t i = 0; i < that.nodes->size(); ++i, ++itr) {    // forgot "++itr", then cause logic error
+            this->nodes->push_back(*itr);
+        }
+        return *this;
+    };
+    Polynomial operator+(const Polynomial& that) {
+        Polynomial poly = *this;
+        CircularList<Term>::iterator itr = that.nodes->begin();
+        for (size_t i = 0; i < that.length(); ++i) {
+            poly += *(itr++);
+        }
+        /*
+        size_t i_this = this->nodes->size(), i_that = that.nodes->size();
+        CircularList<Term>::iterator itr_this = this->nodes->begin();
+        CircularList<Term>::iterator itr_that = that.nodes->begin();
+        while (i_this || i_that) {
+            if (!i_this) {
+                poly.nodes->push_back(*itr_that);
+                ++itr_that;
+                --i_that;
+            } else if (!i_that) {
+                poly.nodes->push_back(*itr_this);
+                ++itr_this;
+                --i_this;
+            } else if ((*itr_this).exp == (*itr_that).exp) {
+                poly.nodes->push_back(
+                    Term((*itr_this).coef + (*itr_that).coef, (*itr_this).exp)
+                );
+                ++itr_this; --i_this;
+                ++itr_that; --i_that;
+            } else if ((*itr_this).exp < (*itr_that).exp) {
+                poly.nodes->push_back(*itr_this);
+                ++itr_this; --i_this;
+            } else {
+                poly.nodes->push_back(*itr_that);
+                ++itr_that; --i_that;
+            }
+        };
+        */
+        return poly;
+    };
+    Polynomial operator-() {
+        Polynomial poly = Polynomial(*this);
+        CircularList<Term>::iterator itr = poly.nodes->begin();
+        for (size_t i = 0; i < poly.nodes->size(); ++i) {
+            (*itr).coef *= -1;
+        }
+        return poly;
+    };
+    Polynomial operator-(const Polynomial& that) {
+        Polynomial poly = *this;
+        CircularList<Term>::iterator itr = that.nodes->begin();
+        for (size_t i = 0; i < that.length(); ++i) {
+            poly += -*(itr++);
+        }
+        poly._dump();
+        return poly;
+        /*
+        Polynomial poly;
+        size_t i_this = this->nodes->size(), i_that = that.nodes->size();
+        CircularList<Term>::iterator itr_this = this->nodes->begin();
+        CircularList<Term>::iterator itr_that = that.nodes->begin();
+        while (i_this || i_that) {
+            if (!i_this) {
+                poly.nodes->push_back(-(*itr_that));
+                ++itr_that;
+                --i_that;
+            } else if (!i_that) {
+                poly.nodes->push_back(*itr_this);
+                ++itr_this;
+                --i_this;
+            } else if ((*itr_this).exp == (*itr_that).exp) {
+                poly.nodes->push_back(
+                    Term((*itr_this).coef - (*itr_that).coef, (*itr_this).exp)
+                );
+                ++itr_this; --i_this;
+                ++itr_that; --i_that;
+            } else if ((*itr_this).exp < (*itr_that).exp) {
+                poly.nodes->push_back(*itr_this);
+                ++itr_this; --i_this;
+            } else {
+                poly.nodes->push_back(-(*itr_that));
+                ++itr_that; --i_that;
+            }
+        };
+        */
+    };
+    Polynomial operator*(const Polynomial& that) {
+        Polynomial poly;
+        CircularList<Term>::iterator
+            itr_this = this->nodes->begin(),
+            itr_that = that.nodes->begin();
+        for (size_t i_this = 0; i_this < this->length(); ++itr_this, ++i_this) {
+            for (size_t i_that = 0; i_that < that.length(); ++itr_that, ++i_that) {
+                poly += Term(itr_this->coef * itr_that->coef, itr_this->exp + itr_that->exp);
+                // cout << "(" << *itr_this << " * "<< *itr_that << ")";
+                // poly.debug();
+            }
+        }
+        poly._dump();
+        return poly;
+    };
+
+    float Evaluate(float x) const {
+        float t = 0.0f;
+        CircularList<Term>::iterator itr = nodes->begin();
+        for (size_t i = 0; i < nodes->size(); ++i, ++itr) {
+            t += (*itr).coef * pow(x, (*itr).exp);
+        }
+        return t;
+    };
+
+    size_t length() const {
+        return nodes->size();
+    };
+
+
+    void debug() {
+        cout <<"p=";
+        nodes->debug();
+        cout<<"\n";
+    };
+private:
+    CircularList<Term>* nodes;
+};
+istream &operator>>(istream &input, Polynomial &x) {
+    int a, b;
+    input >> a >> b;
+    x += Polynomial::Term(a, b);
+    return input;
+};
+ostream &operator<<(ostream &output, const Polynomial &x) {
+    CircularList<Polynomial::Term>::iterator itr = (x.nodes->begin());
+    for (size_t i = 0; i < x.length(); ++i, ++itr) {
+        output << (itr)->coef << " " << itr->exp << " ";
+        // output << "(" << (itr)->coef << " " << itr->exp << ")";
+    };
+    return output;
+};
+
+
+/*
+class Polynomial
+{
+    friend istream &operator>>(istream &is, Polynomial &x);
+    friend istream &operator>>(istream &is, Polynomial &x);
+
+public:
+    Polynomial() {};
+    Polynomial(const Polynomial &a) {};
+    ~Polynomial() {
+        // delete _node ss (link)
+    };
+
+    const Polynomial &operator=(const Polynomial a) {};
+    Polynomial operator+(const Polynomial b) {};
+    Polynomial operator-(const Polynomial b) {};
+    Polynomial operator*(const Polynomial b) {};
+
+    float Evaluate(float x) const {};
+
+    class Node
+    {
+    public:
+        // Node() : link(nullptr) {};
+        Node(int coef_ = 0, int exp_ = 0) : link(nullptr), coef(coef_), exp(exp_) {};
+        Node(const Node &that) : Node(that.coef, that.exp) {};
+        ~Node() {};
+
+        Node operator=(const Node &that)
+        {
+            this->coef = that.coef;
+            this->exp = that.exp;
+            // dont care 'link' (Node*)
+            return *this;
+        };
+
+        Node *get(size_t index)
+        {
+            if (!index)
+                return this;
+            else if (!link)
+                throw "Out of Range.";
+            else
+                return this->link->get(index - 1);
+        };
+        Node *get_prv(size_t index)
+        {
+            if (!index)
+                return nullptr;
+            return Node::get(index - 1);
+        };
+
+    public:
+        int coef;
+        int exp;
+        Node *link;
+        // private:
+    };
+
+private:
+    // Node* _node_get(size_t index) {};
+    void _sort() {};
+
+    size_t _node_append(Node node) {};
+    void _node_insert(size_t index, int coef, int exp) {};
+    void _node_insert(size_t index, Node node) {};
+
+    // returns false when deletes nothing
+    bool _node_delete(size_t index)
+    {
+        if (index >= _sizes)
+            return false;
+    };
+    bool _node_replace(size_t index, Node node = {})
+    {
+        try
+        {
+            if (index = _sizes)
+            {
+                // node.link = _nodes->link;
+                // *_nodes = node;
+                return _node_append(node);
+            }
+            else if (index > _sizes)
+            {
+                // out of range
+                throw -1;
+                // return false;
+            }
+            else
+            {
+                // Node *ptr = _nodes->get(index);
+                // node.link = ptr->link;
+                *(_nodes->get(index)) = node;
+            }
+            return true;
+        }
+        catch (int e)
+        {
+            return false;
+        }
+    };
+
+    Node _node_pop() {};
+    Node _node_shift() {};
+
+private:
+    // node list
+    Node *_nodes;
+
+    bool _is_sorted;
+    size_t _sizes;
+};
+
+istream &operator>>(istream &is, Polynomial &x) {};
+istream &operator>>(istream &is, Polynomial &x) {};
+*/
+
+// Polynomial #END
+
+
+
+/*
+int main()
+{
+    Chain<int> c;
+    for (int i = 0; i < 20; ++i) {
+        c.push_back(i);
+    }
+    cout << "c.size=" << c.size() << endl;
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+    cout << "c.index_of(5)=" << c.index_of(5) << endl;
+    cout << "c.index_of_opposite(6)=" << c.index_of_opposite(6) << endl;
+
+    cout << "c[7]=9=" << c[7] << endl;
+    c[7] = 9;
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+
+    cout << "c.insert(8, 999)=>" << endl;
+    c.insert(8, 999);
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+
+    cout << "c.remove(8)=>" << endl;
+    c.remove(8);
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+
+    // c.debug();
+
+    cout << "c.clear()=>" << endl;
+    c.clear();
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+
+    // c.debug();
+    cout << "c.push_front([20~1])=>" << endl;
+    for (int i = 20; i > 0; --i) {
+        c.push_front(i);
+    }
+    // c.debug();
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+
+    int back = c.pop_back();
+    cout << "c.pop_back()=" << back << endl << "c= ";
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+
+    int front = c.pop_front();
+    cout << "c.pop_front()=" << front << endl << "c= ";
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+
+    cout << "c.clear()" << endl;
+    c.clear();
+    for(int i = 0; i < 10; ++i) {
+        c.push_back(2);
+    }
+    cout << "c.push_back([2 * 10])=>" << endl;
+    for (Chain<int>::ChainIterator i = c.begin(); i != c.end(); ++i) {
+        int v = *i;
+        cout << v << " ";
+    } cout << endl;
+    cout << "c.index_of(2)=" << c.index_of(2) << endl;
+    cout << "c.index_of_opposite(2)=" << c.index_of_opposite(2) << endl;
+    cout << "c.index_of(200)=" << c.index_of(200) << endl;
+    cout << "c.index_of_opposite(200)=" << c.index_of_opposite(200) << endl;
+    return 0;
+}
+*/
+
+
+int main()
+{
+    int na, nb;
+    Polynomial A, B;
+    cin >> na >> nb;
+    while(na--) {
+        cin >> A;
+        // A.debug();
+    }
+    while(nb--) {
+        cin >> B;
+        // B.debug();
+    }
+
+    cout << "A=" << A << endl;
+    cout << "B=" << B << endl;
+    cout << "A+B=" << (A + B) << endl;
+    cout << "A=" << A << endl;
+    cout << "A-B=" << (A - B) << endl;
+    cout << "A*B=" << (A * B) << endl;
+    // cout << "A/B=" << (A / B) << endl;
+
+
+    /*
+    Polynomial poly;
+    int n;
+    cin >> n;
+    while (n--) {
+        cin >> poly;
+    }
+    cout << "result:\n" << poly << endl;
+    */
+
+
+
+    /*
+    CircularList<int> c;
+    for (int i = 0; i < 20; ++i) {
+        c.push_back(i);
+    }
+    cout << "c.size=" << c.size() << endl;
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+    cout << "c.index_of(5)=" << c.index_of(5) << endl;
+    cout << "c.index_of_opposite(6)=" << c.index_of_opposite(6) << endl;
+
+    cout << "c[7]=9=" << c[7] << endl;
+    c[7] = 9;
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+
+    cout << "c.insert(8, 999)=>" << endl;
+    c.insert(8, 999);
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+
+    cout << "c.remove(8)=>" << endl;
+    c.remove(8);
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+
+    // c.debug();
+
+    cout << "c.clear()=>" << endl;
+    c.clear();
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+
+    // c.debug();
+    cout << "c.push_front([20~1])=>" << endl;
+    for (int i = 20; i > 0; --i) {
+        c.push_front(i);
+    }
+    // c.debug();
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+
+    int back = c.pop_back();
+    cout << "c.pop_back()=" << back << endl << "c= ";
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+
+    int front = c.pop_front();
+    cout << "c.pop_front()=" << front << endl << "c= ";
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+
+    cout << "c.clear()" << endl;
+    c.clear();
+    for(int i = 0; i < 10; ++i) {
+        c.push_back(2);
+    }
+    cout << "c.push_back([2 * 10])=>" << endl;
+    for (size_t i =0; i < c.size(); ++i) {
+        int v = c[i];
+        cout << v << " ";
+    } cout << endl;
+    cout << "c.index_of(2)=" << c.index_of(2) << endl;
+    cout << "c.index_of_opposite(2)=" << c.index_of_opposite(2) << endl;
+    cout << "c.index_of(200)=" << c.index_of(200) << endl;
+    cout << "c.index_of_opposite(200)=" << c.index_of_opposite(200) << endl;
+    */
+    return 0;
+}
+```
+
 ## 效能分析
+
+| 方法 | 時間複雜度 |
+| - | - |
+| `push_front`/`push_back` | $O(1)$ |
+| `_search` | $O(n)$ |
+| `insert`/`remove` | $O(n)$ |
+
+| 方法 | 時間複雜度 | 空間複雜度 |
+| - | - | - |
+| `Evaluate` | $O(n)$ | $O(1)$ |
+| `operator+=` | $O(n)$ | $O(1)$ |
+| `operator+/-` | $O(n + m)$ | $O(n + m)$ |
+| `operator*` | $O(n^2*m)$ | $O(n * m)$ |
 
 ## 測試與驗證
 
-## 解題說明
+```shell
+> 3 3 4 4 3 3 2 2 3 3 2 2 1 1
+A=4 4 3 3 2 2 
+B=3 3 2 2 1 1 
+A+B=4 4 6 3 4 2 1 1 
+A=4 4 3 3 2 2 
+A-B=4 4 -1 1 
+A*B=12 7 17 6 16 5 7 4 2 3 
+```
 
 ## 申論及開發報告
+
+這次設計透過一些簡單直接的邏輯進行設計，而非透過複雜且優化的邏輯設計。
+設計中引入部分先前設計的邏輯，並專注於Chain與CircularList的設計，其中使用雙向鍊提高效率並允許Iterator使用++或--。
