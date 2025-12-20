@@ -606,7 +606,7 @@ protected:
 
     void _sort() {
         if (nodes->empty()) return;
-        ;
+        cout << "Warn, method \"_sort()\' still building";
     };
 
     // narrow the List, merge all same Terms which have same exp
@@ -734,8 +734,9 @@ public:
         Polynomial poly = *this;
         CircularList<Term>::iterator itr = that.nodes->begin();
         for (size_t i = 0; i < that.length(); ++i) {
-            poly += *(itr++);
+            poly += -*(itr++);
         }
+        poly._dump();
         return poly;
         /*
         Polynomial poly;
@@ -775,8 +776,8 @@ public:
         for (size_t i_this = 0; i_this < this->length(); ++itr_this, ++i_this) {
             for (size_t i_that = 0; i_that < that.length(); ++itr_that, ++i_that) {
                 poly += Term(itr_this->coef * itr_that->coef, itr_this->exp + itr_that->exp);
-                cout << "(" << *itr_this << " * "<< *itr_that << ")";
-                poly.debug();
+                // cout << "(" << *itr_this << " * "<< *itr_that << ")";
+                // poly.debug();
             }
         }
         poly._dump();
@@ -814,7 +815,8 @@ istream &operator>>(istream &input, Polynomial &x) {
 ostream &operator<<(ostream &output, const Polynomial &x) {
     CircularList<Polynomial::Term>::iterator itr = (x.nodes->begin());
     for (size_t i = 0; i < x.length(); ++i, ++itr) {
-        output << "(" << (itr)->coef << " " << itr->exp << ")";
+        output << (itr)->coef << " " << itr->exp << " ";
+        // output << "(" << (itr)->coef << " " << itr->exp << ")";
     };
     return output;
 };
@@ -1038,14 +1040,15 @@ int main()
     cin >> na >> nb;
     while(na--) {
         cin >> A;
-        A.debug();
+        // A.debug();
     }
     while(nb--) {
         cin >> B;
-        B.debug();
+        // B.debug();
     }
 
     cout << "A=" << A << endl;
+    cout << "B=" << B << endl;
     cout << "A+B=" << (A + B) << endl;
     cout << "A=" << A << endl;
     cout << "A-B=" << (A - B) << endl;
